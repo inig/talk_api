@@ -42,7 +42,7 @@ module.exports = class extends enkel.controller.base {
 
   indexAction () {
     return this.UserModel.findOne({where: {'username': 'ls'}}).then((user) => {
-      return this.json({status: 200, message: '成功', data: user})
+      return this.json({status: 200, message: '成功2', data: user})
     })
   }
 
