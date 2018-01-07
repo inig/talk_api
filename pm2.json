@@ -9,7 +9,7 @@
     "autorestart": true,
     "watch": true,
     "exec_mode": "cluster",
-    "instances": 4,
+    "instances": 2,
     "node_args": "",
     "args": [],
     "env": {
