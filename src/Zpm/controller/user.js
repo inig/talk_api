@@ -33,11 +33,14 @@
 /**
  * Created by liangshan on 2017/11/13.
  */
+const jwt = require('jsonwebtoken');
+const secret = 'com.dei2';
+const tokenExpiresIn = '7d';
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http);
 
-    this.UserModel = this.models('Home/user')
+    this.UserModel = this.models('Zpm/user')
   }
 
   indexAction () {
@@ -55,6 +58,87 @@ module.exports = class extends enkel.controller.base {
     });
     let count = await this.UserModel.count({where: {username: 'ls'}});
     return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
+  }
+
+  async checkLogin (args) {
+    if (!args.token || args.token === '') {
+      return false;
+    }
+    let _status = jwt.verify(args.token, secret, (err, decoded) => {
+        return err || {};
+    });
+    if (_status.name === 'TokenExpiredError') {
+      return false;
+    } else {
+      let loginUser = await this.UserModel.findOne({where: {username: args.username, password: args.password}});
+      if (!loginUser) {
+        loginUser = await this.UserModel.findOne({where: {phonenum: args.username, password: args.password}});
+        if (!loginUser) {
+          return false;
+        } else {}
+      } else {}
+      if (loginUser.token === '') {
+        return false;
+      } else {
+        let _storeTokenStatus = jwt.verify(args.token, secret, (err, decoded) => {
+            return err || {};
+        });
+        if (_storeTokenStatus.name === 'TokenExpiredError') {
+          return false;
+        } else {
+        }
+        return true;
+      }
+    }
+  }
+
+  async loginAction () {
+    if (!this.isPost()) {
+      return this.json({status: 403, message: '请求方法不正确'});
+    }
+    let params = await this.post();
+    if (params.username === '') {
+      return this.json({status: 401, message: '用户名不能为空'});
+    }
+    if (params.password === '') {
+      return this.json({status: 401, message: '密码不能为空'});
+    }
+    let loginWith = '';
+    let loginUser = await this.UserModel.findOne({where: {username: params.username, password: params.password}});
+    if (!loginUser) {
+      loginUser = await this.UserModel.findOne({where: {phonenum: params.username, password: params.password}});
+      if (!loginUser) {
+        return this.json({status: 401, message: '账号或密码不正确'});
+      } else {
+        // 登录成功
+        loginWith = 'phonenum';
+      }
+    } else {
+      // 登录成功
+      loginWith = 'username';
+    }
+    let loginToken = jwt.sign({
+      data: {
+        username: params.username
+      }
+    }, secret, { expiresIn: tokenExpiresIn });
+    let searchCondition = {};
+    searchCondition[loginWith] = params.username;
+    searchCondition['password'] = params.password;
+    let updateLoginStatus = await this.UserModel.update({token: loginToken}, {
+      where: searchCondition
+    });
+    if (updateLoginStatus[0] > 0) {
+      // 更新用户登录token成功
+      if (loginUser.dataValues.id) {
+        delete loginUser.dataValues.id
+      }
+      if (loginUser.dataValues.password) {
+        delete loginUser.dataValues.password;
+      }
+      loginUser.dataValues.token = loginToken;
+    }
+    return this.json({status: 200, message: '登录成功', data: loginUser.dataValues})
   }
 
 }
