@@ -50,7 +50,7 @@ module.exports = class extends enkel.controller.base {
   }
 
   indexAction () {
-      return this.json({status: 200, message: '成功0'})
+      return this.json({status: 200, message: '成功11'})
   }
 
   async addPluginAction () {
