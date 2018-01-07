@@ -33,6 +33,8 @@
 /**
  * Created by liangshan on 2017/11/13.
  */
+const fs = require('fs')
+const path = require('path')
 const jwt = require('jsonwebtoken');
 const secret = 'com.dei2';
 module.exports = class extends enkel.controller.base {
@@ -168,6 +170,19 @@ module.exports = class extends enkel.controller.base {
           }
           return this.json({status: 200, message: '成功', data: resultPlugins});
       }
+  }
+
+  async contentAction () {
+      if (!this.isPost()) {
+          return this.json({status: 405, message: '请求方法不正确', data: {}});
+      }
+      let params = await this.post();
+      if (!params.plugin || params.plugin === '' || !params.filename || params.filename === '') {
+          return this.json({status: 200, message: '成功', data: { content: '' }});
+      }
+      let fileContent = await fs.readFileSync(`/srv/web_static/plugins/${params.plugin || ''}/${params.filename || ''}`, {encoding: 'utf-8'});
+      let txt = fileContent || '';
+      return this.json({status: 200, message: '成功', data: { content: txt }});
   }
 
 }
