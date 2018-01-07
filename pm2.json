@@ -4,7 +4,7 @@
   "apps": [{
     "name": "talk_api",
     "script": "index.js",
-    "cwd": "talk_api/app/",
+    "cwd": "app/",
     "max_memory_restart": "1G",
     "autorestart": true,
     "node_args": "",
