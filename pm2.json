@@ -7,6 +7,9 @@
     "cwd": "app/",
     "max_memory_restart": "1G",
     "autorestart": true,
+    "watch": true,
+    "exec_mode": "cluster",
+    "instances": 4,
     "node_args": "",
     "args": [],
     "env": {
