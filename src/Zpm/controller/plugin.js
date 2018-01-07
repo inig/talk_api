@@ -35,50 +35,46 @@
  */
 const jwt = require('jsonwebtoken');
 const secret = 'com.dei2';
-const tokenExpiresIn = '7d';
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http);
 
+    this.PluginModel = this.models('Zpm/plugin');
     this.UserModel = this.models('Zpm/user');
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
     this.response.setHeader('Access-Control-Allow-Methods', '*');
+
+    this.Op = this.Sequelize.Op
   }
 
   indexAction () {
-    return this.UserModel.findOne({where: {'username': 'ls'}}).then((user) => {
-      return this.json({status: 200, message: '成功2', data: user})
-    })
+      return this.json({status: 200, message: '成功'})
   }
 
-  async addUserAction () {
-    await this.UserModel.create({
-      username: 'ls',
-      password: '123123',
-      phonenum: '18000000000',
-      nickname: 'ls',
-      gender: 1,
-      plugins: 'ZpmConsole;ZpmMovable;ZpmToast'
-    });
-      await this.UserModel.create({
-          username: 'wq',
-          password: '123123',
-          phonenum: '18000000001',
-          nickname: 'wq',
-          gender: 1,
-          plugins: 'ZpmMsgBox'
+  async addPluginAction () {
+      await this.PluginModel.create({
+          name: 'ZpmConsole',
+          author: '18000000000'
       });
-      await this.UserModel.create({
-          username: 'wjx',
-          password: '123123',
-          phonenum: '18000000002',
-          nickname: 'wjx',
-          gender: 2,
-          plugins: 'ZpmTopBar'
+      await this.PluginModel.create({
+          name: 'ZpmMovable',
+          author: '18000000000'
       });
-    let count = await this.UserModel.count({where: {username: 'wq'}});
+      await this.PluginModel.create({
+          name: 'ZpmToast',
+          author: '18000000000'
+      });
+      await this.PluginModel.create({
+          name: 'ZpmMsgBox',
+          author: '18000000001'
+      });
+      await this.PluginModel.create({
+          name: 'ZpmTopBar',
+          author: '18000000002'
+      });
+    let count = await this.PluginModel.count({where: {name: 'ZpmConsole'}});
     return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
   }
 
@@ -114,56 +110,64 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async loginAction () {
-    if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
-    }
-    let params = await this.post();
-    if (params.username === '') {
-      return this.json({status: 401, message: '用户名不能为空', data: {}});
-    }
-    if (params.password === '') {
-      return this.json({status: 401, message: '密码不能为空', data: {}});
-    }
-    let loginWith = '';
-    let loginUser = await this.UserModel.findOne({
-        where: {username: params.username, password: params.password},
-        attributes: {exclude: ['id', 'password']}
-    });
-    if (!loginUser) {
-      loginUser = await this.UserModel.findOne({
-          where: {phonenum: params.username, password: params.password},
-          attributes: {exclude: ['id', 'password']}
-      });
-      if (!loginUser) {
-        return this.json({status: 401, message: '账号或密码不正确', data: {}});
+    /***
+     * 查找插件列表
+     * phonenum，只能传手机号
+     * token，用户缓存的登录凭证
+     * search, 查找指定人（手机号）的所有插件，当设置search参数后，下面的type参数则会失效
+     * type，查找指定类型的插件，可选：'self'、'other'、'all'。分别为自己的、非自己的、所有人的插件列表
+     * @returns {Promise<*|{line, column}|number>}
+     */
+  async listAction () {
+      if (!this.isPost()) {
+          return this.json({status: 405, message: '请求方法不正确', data: {}});
+      }
+      let params = await this.post();
+      if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+          return this.json({status: 401, message: '缺少参数', data: {}});
+      }
+      if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+          return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
       } else {
-        // 登录成功
-        loginWith = 'phonenum';
+          let resultPlugins = [];
+          if (!params.search || params.search === '') {
+              let queryType = params.type || 'self';
+              switch (queryType) {
+                  case 'self':
+                      // 查询自己的
+                      resultPlugins = await this.PluginModel.findAll({
+                          where: {
+                              author: params.phonenum
+                          }
+                      });
+                      break;
+                  case 'other':
+                      resultPlugins = await this.PluginModel.findAll({
+                          where: {
+                              author: {
+                                  [this.Op.ne]: params.phonenum
+                              }
+                          }
+                      });
+                      // 查询非自己的
+                      break;
+                  case 'all':
+                      // 查询所有人的
+                      resultPlugins = await this.PluginModel.findAll()
+                      break;
+                  default:
+                      break;
+              }
+          } else {
+              // 查找指定人的
+              resultPlugins = await this.PluginModel.findAll({
+                  where: {
+                      author: params.search
+                  }
+              })
+          }
+          return this.json({status: 200, message: '成功', data: resultPlugins});
       }
-    } else {
-      // 登录成功
-      loginWith = 'username';
-    }
-    let loginToken = jwt.sign({
-      data: {
-        username: params.username
-      }
-    }, secret, { expiresIn: tokenExpiresIn });
-    let searchCondition = {};
-    searchCondition[loginWith] = params.username;
-    searchCondition['password'] = params.password;
-    let updateLoginStatus = await this.UserModel.update({
-        token: loginToken,
-        lastLoginTime: (+new Date())
-    }, {
-      where: searchCondition
-    });
-    if (updateLoginStatus[0] > 0) {
-      // 更新用户登录token成功
-      loginUser.dataValues.token = loginToken;
-    }
-    return this.json({status: 200, message: '登录成功', data: loginUser.dataValues || {}})
   }
 
 }

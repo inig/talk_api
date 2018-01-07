@@ -22,37 +22,55 @@ module.exports = {
       allowNull: false
     },
     email: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+      defaultValue: ''
     },
     nickname: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     headIcon: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     lastLoginTime: {
-      type: Sequelize.DATE
+      type: Sequelize.STRING,
+        defaultValue: (+new Date())
     },
     lastLoginIp: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     birthday: {
-      type: Sequelize.DATE
+      type: Sequelize.STRING,
+        defaultValue: (+new Date())
     },
     gender: {
-      type: Sequelize.INTEGER
+      type: Sequelize.INTEGER,
+        defaultValue: 1
     },
     website: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     status: {
-      type: Sequelize.INTEGER
+      type: Sequelize.INTEGER,
+        defaultValue: 1
     },
     token: {
-      type: Sequelize.TEXT
+      type: Sequelize.TEXT,
+        defaultValue: ''
     },
     plugins: {
-      type: Sequelize.TEXT
+      type: Sequelize.TEXT,
+        defaultValue: ''
+    }
+  },
+  relations: {
+    plugin: {
+      type: 'hasMany',
+      foreignKey: 'author',
+      sourceKey: 'id'
     }
   }
 };

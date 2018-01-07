@@ -2,7 +2,7 @@
  * Created by liangshan on 2017/11/5.
  */
 const path = require('path');
-const enkel = require('enkel');
+const enkel = require('../../../ls/enkel/enkel');
 const config = require('./config/config');
 
 const instance = new enkel({

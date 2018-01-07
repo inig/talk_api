@@ -22,31 +22,43 @@ module.exports = {
       allowNull: false
     },
     email: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     nickname: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     headIcon: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     lastLoginTime: {
-      type: Sequelize.DATE
+      type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
     },
     lastLoginIp: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     birthday: {
-      type: Sequelize.DATE
+      type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
     },
     gender: {
-      type: Sequelize.INTEGER
+      type: Sequelize.INTEGER,
+        defaultValue: 1
     },
     website: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+        defaultValue: ''
     },
     status: {
-      type: Sequelize.INTEGER
+      type: Sequelize.INTEGER,
+        defaultValue: 1
     }
+  },
+  relations: {
+
   }
 };
