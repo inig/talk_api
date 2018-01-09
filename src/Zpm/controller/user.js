@@ -166,4 +166,43 @@ module.exports = class extends enkel.controller.base {
     return this.json({status: 200, message: '登录成功', data: loginUser.dataValues || {}})
   }
 
+  async registerAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+
+    if (params.phonenum === '') {
+      return this.json({status: 401, message: '手机号不能为空', data: {}});
+    } else {
+      if (!params.phonenum.match(/^1[345789]\d{9}$/)) {
+        return this.json({status: 401, message: '手机号格式不正确', data: {}});
+      }
+    }
+    if (params.password === '') {
+      return this.json({status: 401, message: '密码不能为空', data: {}});
+    }
+    let loginWith = '';
+    let loginUserCount = await this.UserModel.count({
+        where: {phonenum: params.phonenum},
+        attributes: {exclude: ['id', 'password']}
+    });
+    if (loginUserCount < 1) {
+      // 注册新用户
+      await this.UserModel.create({
+        username: params.phonenum,
+        password: params.password,
+        phonenum: params.phonenum,
+        nickname: '',
+        gender: 1,
+        plugins: ''
+      });
+      let count = await this.UserModel.count({where: {phonenum: params.phonenum}});
+      return this.json({status: 200, message: count > 0 ? '注册成功' : '注册失败', data: {}});
+    } else {
+      // 用户名已存在
+      return this.json({status: 401, message: '手机号已存在', data: {}});
+    }
+  }
+
 }
