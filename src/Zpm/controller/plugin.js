@@ -185,4 +185,23 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 200, message: '成功', data: { content: txt }});
   }
 
+  async uploadAction () {
+    let params = this.get();
+    try {
+      let uploadedFile = await this.upload({
+        accept: params.accept,
+        size: Number(params.ms) * 1024,
+        uploadDir: `/srv/web_static/plugins/${params.p}`,
+        rename: params.rn || false,
+        multiples: false
+      });
+      return this.json({status: 200, message: '成功', data: {
+        path: `https://static.dei2.com/plugins/${params.p}/${uploadedFile.filename}`
+      }});
+    } catch (err) {
+      return this.json({status: 1002, message: JSON.stringify(err) || '', data: {}});
+    }
+
+  }
+
 }
