@@ -180,9 +180,29 @@ module.exports = class extends enkel.controller.base {
       if (!params.plugin || params.plugin === '' || !params.filename || params.filename === '') {
           return this.json({status: 200, message: '成功', data: { content: '', plugin: params.plugin, filename: params.filename }});
       }
-      let fileContent = await fs.readFileSync(`/srv/web_static/plugins/${params.plugin || ''}/${params.filename || ''}`, {encoding: 'utf-8'});
-      let txt = fileContent || '';
-      return this.json({status: 200, message: '成功', data: { content: txt, plugin: params.plugin, filename: params.filename }});
+      let _pluginPath = `/srv/web_static/plugins/${params.plugin || ''}`;
+      if (!fs.existsSync(_pluginPath)) {
+        // 文件目录不存在
+        return this.json({status: 1002, message: '插件目录不存在', data: { plugin: params.plugin, filename: params.filename }});
+      } else {
+        let _pluginFile = _pluginPath + '/' + params.filename;
+        if (!fs.existsSync(_pluginFile)) {
+          // 文件不存在
+          return this.json({status: 1002, message: '文件不存在', data: { content: '', plugin: params.plugin, filename: params.filename }});
+        } else {
+          // 文件存在
+          let _fileStat = fs.statSync(_pluginFile);
+          if (_fileStat.isFile()) {
+            // 是文件
+            let fileContent = await fs.readFileSync(`/srv/web_static/plugins/${params.plugin || ''}/${params.filename}`, {encoding: 'utf-8'});
+            let txt = fileContent || '';
+            return this.json({status: 200, message: '成功', data: { content: txt, plugin: params.plugin, filename: params.filename }});
+          } else {
+            // 不是文件
+            return this.json({status: 1002, message: '不能识别的文件类型', data: { content: '', plugin: params.plugin, filename: params.filename }});
+          }
+        }
+      }
   }
 
   async uploadAction () {
