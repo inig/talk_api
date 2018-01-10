@@ -178,11 +178,11 @@ module.exports = class extends enkel.controller.base {
       }
       let params = await this.post();
       if (!params.plugin || params.plugin === '' || !params.filename || params.filename === '') {
-          return this.json({status: 200, message: '成功', data: { content: '' }});
+          return this.json({status: 200, message: '成功', data: { content: '', plugin: params.plugin, filename: params.filename }});
       }
       let fileContent = await fs.readFileSync(`/srv/web_static/plugins/${params.plugin || ''}/${params.filename || ''}`, {encoding: 'utf-8'});
       let txt = fileContent || '';
-      return this.json({status: 200, message: '成功', data: { content: txt }});
+      return this.json({status: 200, message: '成功', data: { content: txt, plugin: params.plugin, filename: params.filename }});
   }
 
   async uploadAction () {
