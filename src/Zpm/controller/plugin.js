@@ -207,21 +207,28 @@ module.exports = class extends enkel.controller.base {
 
   async uploadAction () {
     let params = this.get();
-    try {
-      let uploadedFile = await this.upload({
-        accept: params.accept,
-        size: Number(params.ms) * 1024,
-        uploadDir: `/srv/web_static/plugins/${params.p}`,
-        rename: params.rn || false,
-        multiples: false
-      });
-      return this.json({status: 200, message: '成功', data: {
-        path: `https://static.dei2.com/plugins/${params.p}/${uploadedFile.filename}`
-      }});
-    } catch (err) {
-      return this.json({status: 1002, message: JSON.stringify(err) || '', data: {}});
+    let _isLegalLogin = this.checkLogin({
+      username: params.u,
+      token: params.token
+    })
+    if (!_isLegalLogin) {
+      return this.json({status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true }});
+    } else {
+      try {
+        let uploadedFile = await this.upload({
+          accept: params.accept,
+          size: Number(params.ms) * 1024,
+          uploadDir: `/srv/web_static/plugins/${params.p}`,
+          rename: params.rn || false,
+          multiples: false
+        });
+        return this.json({status: 200, message: '成功', data: {
+          path: `https://static.dei2.com/plugins/${params.p}/${uploadedFile.filename}`
+        }});
+      } catch (err) {
+        return this.json({status: 1002, message: JSON.stringify(err) || '', data: {}});
+      }
     }
-
   }
 
 }
