@@ -41,6 +41,7 @@ module.exports = class extends enkel.controller.base {
     super.init(http);
 
     this.UserModel = this.models('Zpm/user');
+    this.RoleModel = this.models('Zpm/role');
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
@@ -54,13 +55,29 @@ module.exports = class extends enkel.controller.base {
   }
 
   async addUserAction () {
+      await this.UserModel.create({
+          username: 'root',
+          password: '123123',
+          phonenum: '13888888888',
+          nickname: '王二狗',
+          gender: 1,
+          role: 1
+      });
+      await this.UserModel.create({
+          username: 'admin',
+          password: '123123',
+          phonenum: '13899999999',
+          nickname: '王大锤',
+          gender: 1,
+          role: 2
+      });
     await this.UserModel.create({
       username: 'ls',
       password: '123123',
       phonenum: '18000000000',
       nickname: 'ls',
       gender: 1,
-      plugins: 'ZpmConsole;ZpmMovable;ZpmToast'
+      role: 3
     });
       await this.UserModel.create({
           username: 'wq',
@@ -68,7 +85,7 @@ module.exports = class extends enkel.controller.base {
           phonenum: '18000000001',
           nickname: 'wq',
           gender: 1,
-          plugins: 'ZpmMsgBox'
+          role: 3
       });
       await this.UserModel.create({
           username: 'wjx',
@@ -76,10 +93,39 @@ module.exports = class extends enkel.controller.base {
           phonenum: '18000000002',
           nickname: 'wjx',
           gender: 2,
-          plugins: 'ZpmTopBar'
+          role: 3
       });
+      await this.UserModel.create({
+          username: 'user',
+          password: '123123',
+          phonenum: '13877777777',
+          nickname: '张三',
+          gender: 1,
+          role: 4
+      })
     let count = await this.UserModel.count({where: {username: 'wq'}});
     return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
+  }
+
+  async addRoleAction () {
+      await this.RoleModel.create({
+          name: 'superadmin',
+          desc: '超级管理员'
+      });
+      await this.RoleModel.create({
+          name: 'admin',
+          desc: '管理员'
+      });
+      await this.RoleModel.create({
+          name: 'developer',
+          desc: '开发者'
+      });
+      await this.RoleModel.create({
+          name: 'user',
+          desc: '普通用户'
+      });
+      let count = await this.RoleModel.count();
+      return this.json({status: 200, message: count > 0 ? `共添加了${count}个会员等级` : '添加失败'});
   }
 
   async checkLogin (args) {

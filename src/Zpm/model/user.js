@@ -64,6 +64,9 @@ module.exports = {
     plugins: {
       type: Sequelize.TEXT,
         defaultValue: ''
+    },
+    role: {
+      type: Sequelize.INTEGER
     }
   },
   relations: {
