@@ -234,9 +234,9 @@ module.exports = class extends enkel.controller.base {
     }
     let params = await this.post();
     if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {}});
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
     }
-    if (!this.checkLogin({phonenum: params.phonenum, token: params.token})) {
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
       return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
     } else {
       let searchCondition = {};
@@ -265,6 +265,50 @@ module.exports = class extends enkel.controller.base {
         }
       } else {
         return this.json({status: 401, message: '更新失败', data: {}});
+      }
+    }
+  }
+
+  async modifyPasswordAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+    } else {
+
+      if (!/\S{6,}/.test(params.newPass)) {
+        return this.json({status: 401, message: '密码格式不正确', data: {}});
+      }
+      if (params.newPass !== params.rePass) {
+        return this.json({status: 401, message: '两次密码不一致', data: {}});
+      }
+
+      let searchCondition = {};
+      searchCondition['phonenum'] = params.phonenum;
+  
+      let ModifyStatus = await this.UserModel.update({
+        password: params.newPass,
+      }, {
+        where: searchCondition
+      });
+      
+      if (ModifyStatus[0] > 0) {
+        let userInfo = await this.UserModel.findOne({
+          where: {phonenum: params.phonenum, password: params.newPass},
+          attributes: {exclude: ['id', 'password']}
+        });
+        if (userInfo) {
+          return this.json({status: 200, message: '密码更新成功', data: {needLogin: true}});
+        } else {
+          return this.json({status: 401, message: '密码更新失败', data: {}});
+        }
+      } else {
+        return this.json({status: 401, message: '密码更新失败', data: {}});
       }
     }
   }
