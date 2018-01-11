@@ -28,6 +28,7 @@
   "author": "cheenoalive@gmail.com",
   "license": "MIT",
   "dependencies": {
+    "adm-zip": "^0.4.7",
     "jsonwebtoken": "^8.1.0"
   }
 }
