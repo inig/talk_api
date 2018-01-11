@@ -36,6 +36,7 @@
 const fs = require('fs')
 const path = require('path')
 const jwt = require('jsonwebtoken');
+const AdmZip = require('adm-zip');
 const secret = 'com.dei2';
 module.exports = class extends enkel.controller.base {
   init (http) {
@@ -205,6 +206,10 @@ module.exports = class extends enkel.controller.base {
       }
   }
 
+  /**
+   * 上传插件的单个文件
+   * @returns {Promise.<*>}
+   */
   async uploadAction () {
     let params = this.get();
     if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
@@ -235,6 +240,10 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
+  /**
+   * 更新插件的单个文件
+   * @returns {Promise.<*>}
+   */
   async updateAction () {
     if (!this.isPost()) {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
@@ -264,4 +273,78 @@ module.exports = class extends enkel.controller.base {
     return this.json({status: 200, message: '保存成功', data: { plugin: params.plugin, filename: params.filename }});
   }
 
+  rmDir (path) {
+    let files = [];
+    if(fs.existsSync(path)) {
+      files = fs.readdirSync(path);
+      files.forEach(function(file, index) {
+        let curPath = path + "/" + file;
+        if(fs.statSync(curPath).isDirectory()) { // recurse
+          deleteall(curPath);
+        } else { // delete file
+          fs.unlinkSync(curPath);
+        }
+      });
+      fs.rmdirSync(path);
+    }
+  }
+
+  async uploadPluginAction () {
+    let params = this.get();
+    if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
+      return this.json({status: 401, message: '保存失败', data: { needLogin: true }});
+    } else {
+      let _isLegalLogin = this.checkLogin({
+        username: params.phonenum,
+        token: params.token
+      });
+      if (!_isLegalLogin) {
+        return this.json({status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true }});
+      } else {
+        let pluginRootPath = '/Keith/git/ls/npm';
+        try {
+          let uploadedFile = await this.upload({
+            accept: params.accept,
+            size: Number(params.ms) * 1024,
+            uploadDir: pluginRootPath,
+            rename: params.rn || false,
+            multiples: false
+          });
+          let _uploadFileName = uploadedFile.filename.replace(/\.[a-z0-9]+$/i, '');
+          if (fs.existsSync(`${pluginRootPath}/${_uploadFileName}`)) {
+            this.rmDir(`${pluginRootPath}/${_uploadFileName}`);
+          }
+          let zip = new AdmZip(`${pluginRootPath}/${uploadedFile.filename}`);
+          zip.extractAllTo(pluginRootPath, true);
+          let pluginCount = await this.PluginModel.count({
+            where: {
+              name: _uploadFileName
+            }
+          });
+          if (pluginCount < 1) {
+            // 不存在
+            try {
+              await this.PluginModel.create({
+                name: _uploadFileName,
+                author: params.phonenum
+              });
+              return this.json({status: 200, message: '添加成功', data: {
+                plugin: _uploadFileName
+              }});
+            } catch (err) {
+              return this.json({status: 1002, message: '添加失败', data: {
+                plugin: _uploadFileName
+              }});
+            }
+          } else {
+            return this.json({status: 200, message: '添加成功', data: {
+              plugin: _uploadFileName
+            }});
+          }
+        } catch (err) {
+          return this.json({status: 1002, message: JSON.stringify(err) || '', data: {}});
+        }
+      }
+    }
+  }
 }
