@@ -19,7 +19,7 @@
     "test": "npm run test",
     "build": "babel src -d app",
     "start": "npm run build && node app/index.js",
-    "dev": "npm run build -- --watch & supervisor -w app -q app/index"
+    "dev": "npm run build -- --watch | supervisor -w app -q app/index"
   },
   "keywords": [
     "node",
