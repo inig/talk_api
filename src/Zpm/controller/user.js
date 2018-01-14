@@ -43,6 +43,8 @@ module.exports = class extends enkel.controller.base {
     this.UserModel = this.models('Zpm/user');
     this.RoleModel = this.models('Zpm/role');
 
+    this.Op = this.Sequelize.Op;
+
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
     this.response.setHeader('Access-Control-Allow-Methods', '*');
@@ -358,4 +360,187 @@ module.exports = class extends enkel.controller.base {
       }
     }
   }
+
+  async listAction () {
+      if (!this.isPost()) {
+          return this.json({status: 405, message: '请求方法不正确', data: {}});
+      }
+      let params = await this.post();
+      if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+          return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      }
+      if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+          return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+      } else {
+          try {
+              let currentUser = await this.UserModel.findOne({
+                  where: {phonenum: params.phonenum},
+                  attributes: {exclude: ['id', 'password']}
+              });
+              let _searchCondition = JSON.parse(JSON.stringify(params));
+              if (_searchCondition.token) {
+                  delete _searchCondition.token
+              }
+              if (_searchCondition.phonenum) {
+                  delete _searchCondition.phonenum
+              }
+              if (_searchCondition.pageIndex) {
+                  delete _searchCondition.pageIndex
+              }
+              if (_searchCondition.pageSize) {
+                  delete _searchCondition.pageSize
+              }
+
+              if (currentUser && Number(currentUser.role) === 1) {
+                  // 超级管理员
+                  let pageIndex = Number(params.pageIndex) || 1;
+                  let pageSize = Number(params.pageSize) || 30;
+                  let _searchPhonenum = '';
+                  if (_searchCondition.targetPhonenum) {
+                      _searchPhonenum = _searchCondition.targetPhonenum;
+                      delete _searchCondition.targetPhonenum;
+                  }
+                  let _finalConditions = Object.assign({}, _searchCondition, {
+                      phonenum: {
+                          [this.Op.ne]: params.phonenum
+                      }
+                  });
+                  if (_searchPhonenum.trim() !== '') {
+                      _finalConditions = Object.assign({}, _finalConditions, {
+                          phonenum: {
+                              [this.Op.regexp]: `${_searchPhonenum}`,
+                              [this.Op.ne]: params.phonenum
+                          }
+                      });
+                  }
+                  if (_finalConditions.username) {
+                      _finalConditions.username = {
+                          [this.Op.regexp]: `${_finalConditions.username}`
+                      }
+                  }
+                  let userList = await this.UserModel.findAll({
+                      where: _finalConditions,
+                      limit: pageSize,
+                      offset: (pageIndex - 1) * pageSize,
+                      attributes: {exclude: ['id', 'password']}
+                  });
+                  if (userList) {
+                      if (_searchCondition.pageIndex) {
+                          delete _searchCondition.pageIndex
+                      }
+                      if (_searchCondition.pageSize) {
+                          delete _searchCondition.pageSize
+                      }
+                      let _countAll = await this.UserModel.count({
+                          where: _finalConditions
+                      });
+                      return this.json({status: 200, message: '查询成功', data: {
+                          list: userList || [],
+                          count: userList.length,
+                          pageIndex: pageIndex,
+                          pageSize: pageSize,
+                          totalCounts: _countAll,
+                          total: Math.ceil(_countAll / pageSize)
+                      }});
+                  } else {
+                      return this.json({status: 200, message: '查询成功', data: {
+                          list: [],
+                          count: 0,
+                          pageIndex: pageIndex,
+                          pageSize: pageSize
+                      }});
+                  }
+              } else {
+                  return this.json({status: 403, message: '查询失败', data: {}});
+              }
+          } catch (err) {
+              return this.json({status: 403, message: err, data: {}});
+          }
+      }
+  }
+
+    /**
+     * 修改用户的状态、权限
+     * @returns {Promise<*|{line, column}|number>}
+     */
+    async updateUserSettingsAction () {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+        }
+        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+            return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+        } else {
+            try {
+                let currentUser = await this.UserModel.findOne({
+                    where: {phonenum: params.phonenum},
+                    attributes: {exclude: ['id', 'password']}
+                });
+                if (currentUser && Number(currentUser.role) === 1) {
+                    // 超级管理员
+                    let updateCondition = {};
+                    if (params.status) {
+                        updateCondition.status = Number(params.status)
+                    }
+                    if (params.role) {
+                        updateCondition.role = Number(params.role)
+                    }
+                    let updateUser = await this.UserModel.update(updateCondition, {
+                        where: {
+                            phonenum: params.targetPhonenum
+                        }
+                    });
+                    if (updateUser) {
+                        return this.json({status: 200, message: '修改成功', data: { phonenum: params.targetPhonenum }});
+                    } else {
+                        return this.json({status: 1001, message: '修改失败', data: {}});
+                    }
+                } else {
+                    return this.json({status: 403, message: '权限不够', data: {}});
+                }
+            } catch (err) {
+                return this.json({status: 403, message: '权限不够', data: {}});
+            }
+        }
+    }
+
+    async deleteUserAction () {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+        }
+        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+            return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+        } else {
+            try {
+                let currentUser = await this.UserModel.findOne({
+                    where: {phonenum: params.phonenum},
+                    attributes: {exclude: ['id', 'password']}
+                });
+                if (currentUser && Number(currentUser.role) === 1) {
+                    // 超级管理员
+                    let deleteUser = await this.UserModel.destroy({
+                        where: {
+                            phonenum: params.targetPhonenum
+                        }
+                    });
+                    if (deleteUser) {
+                        return this.json({status: 200, message: '删除成功', data: { phonenum: params.deleteUser }});
+                    } else {
+                        return this.json({status: 1001, message: '删除失败', data: {}});
+                    }
+                } else {
+                    return this.json({status: 403, message: '权限不够', data: {}});
+                }
+            } catch (err) {
+                return this.json({status: 403, message: '权限不够', data: {}});
+            }
+        }
+    }
 }
