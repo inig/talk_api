@@ -531,7 +531,7 @@ module.exports = class extends enkel.controller.base {
                         }
                     });
                     if (deleteUser) {
-                        return this.json({status: 200, message: '删除成功', data: { phonenum: params.deleteUser }});
+                        return this.json({status: 200, message: '删除成功', data: { phonenum: params.phonenum }});
                     } else {
                         return this.json({status: 1001, message: '删除失败', data: {}});
                     }
