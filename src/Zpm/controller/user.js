@@ -503,6 +503,43 @@ module.exports = class extends enkel.controller.base {
       }
   }
 
+  async queryUsersAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+    } else {
+      try {
+        let queryUserList = await this.UserModel.findAll({
+          where: {
+            username: {
+              [this.Op.regexp]: `${params.queryUsername}`
+            }
+          },
+          attributes: {exclude: ['id', 'password']}
+        });
+        if (queryUserList) {
+          return this.json({status: 200, message: '查询成功', data: {
+            list: queryUserList || [],
+            count: queryUserList.length
+          }});
+        } else {
+          return this.json({status: 200, message: '查询成功', data: {
+            list: [],
+            count: 0
+          }});
+        }
+      } catch (err) {
+        return this.json({status: 403, message: err, data: {}});
+      }
+    }
+  }
+
     /**
      * 修改用户的状态、权限
      * @returns {Promise<*|{line, column}|number>}

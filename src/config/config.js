@@ -51,5 +51,12 @@ module.exports = {
     db_name: 'talkapi', // 数据库名
     username: 'talkapi', // 用户名
     password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
+  },
+  socket: {
+    ban: false, // 是否开启websocket
+    port: '3010',
+    userKey: 'phonenum', // 用户名
+    namespace: '/sk',
+    events: ['enkel-message']
   }
 }
