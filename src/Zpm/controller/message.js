@@ -165,4 +165,70 @@ module.exports = class extends enkel.controller.base {
       }
     }
   }
+  /**
+   * 查询消息列表
+   * @returns {Promise.<*|{line, column}|number>}
+   */
+  async listAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+    } else {
+      try {
+        let _searchCondition = JSON.parse(JSON.stringify(params));
+        if (_searchCondition.token) {
+          delete _searchCondition.token
+        }
+        if (_searchCondition.phonenum) {
+          delete _searchCondition.phonenum
+        }
+        if (_searchCondition.pageIndex) {
+          delete _searchCondition.pageIndex
+        }
+        if (_searchCondition.pageSize) {
+          delete _searchCondition.pageSize
+        }
+        let pageIndex = Number(params.pageIndex) || 1;
+        let pageSize = Number(params.pageSize) || 30;
+  
+        let messageList = await this.MessageModel.findAll({
+          where: _searchCondition,
+          limit: pageSize,
+          offset: (pageIndex - 1) * pageSize,
+          attributes: {exclude: ['id']},
+          order: [
+            ['createdAt', 'DESC']
+          ]
+        });
+        if (messageList) {
+          let _countAll = await this.MessageModel.count({
+              where: _searchCondition
+          });
+          return this.json({status: 200, message: '查询成功', data: {
+              list: messageList || [],
+              count: messageList.length,
+              pageIndex: pageIndex,
+              pageSize: pageSize,
+              totalCounts: _countAll,
+              total: Math.ceil(_countAll / pageSize)
+          }});
+        } else {
+          return this.json({status: 200, message: '查询成功', data: {
+              list: [],
+              count: 0,
+              pageIndex: pageIndex,
+              pageSize: pageSize
+          }});
+        }
+      } catch (error) {
+        return this.json({status: 403, message: err, data: {}});
+      }
+    }
+  }
 }
