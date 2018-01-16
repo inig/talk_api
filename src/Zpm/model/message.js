@@ -19,7 +19,7 @@ module.exports = {
     fromUsername: {
       type: Sequelize.STRING
     },
-    formPhonenum: {
+    fromPhonenum: {
       type: Sequelize.STRING
     },
     toRole: {

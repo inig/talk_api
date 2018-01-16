@@ -22,6 +22,14 @@ module.exports = {
     remarks: {
       type: Sequelize.TEXT,
         defaultValue: ''
+    },
+    createTime: {
+      type: Sequelize.STRING,
+      defaultValue: (+new Date())
+    },
+    updateTime: {
+      type: Sequelize.STRING,
+      defaultValue: (+new Date())
     }
   },
   relations: {

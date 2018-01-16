@@ -108,9 +108,9 @@ module.exports = class extends enkel.controller.base {
       try {
         let _from = JSON.parse(params.from);
         let _to = JSON.parse(params.to);
-        let _message = JSON.stringify(params.message);
+        let _message = JSON.parse(params.message);
         await this.MessageModel.create({
-          title: _message.title || '',
+          title: _message.title || '新消息',
           desc: _message.value || '',
           fromRole: _from.role || -1,
           fromUsername: _from.username || '',

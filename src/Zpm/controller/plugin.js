@@ -401,7 +401,10 @@ module.exports = class extends enkel.controller.base {
                         where: _searchCondition,
                         limit: pageSize,
                         offset: (pageIndex - 1) * pageSize,
-                        attributes: {exclude: ['id']}
+                        attributes: {exclude: ['id']},
+                        order: [
+                            ['updatedAt', 'DESC']
+                        ]
                     });
                     if (pluginList) {
                         if (_searchCondition.pageIndex) {
