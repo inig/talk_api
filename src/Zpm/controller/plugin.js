@@ -181,7 +181,7 @@ module.exports = class extends enkel.controller.base {
       if (!params.plugin || params.plugin === '' || !params.filename || params.filename === '') {
           return this.json({status: 200, message: '成功', data: { content: '', plugin: params.plugin, filename: params.filename }});
       }
-      let _pluginPath = `/srv/web_static/plugins/${params.plugin || ''}`;
+      let _pluginPath = `/mnt/srv/web_static/plugins/${params.plugin || ''}`;
       if (!fs.existsSync(_pluginPath)) {
         // 文件目录不存在
         return this.json({status: 1002, message: '插件目录不存在', data: { plugin: params.plugin, filename: params.filename }});
@@ -195,7 +195,7 @@ module.exports = class extends enkel.controller.base {
           let _fileStat = fs.statSync(_pluginFile);
           if (_fileStat.isFile()) {
             // 是文件
-            let fileContent = await fs.readFileSync(`/srv/web_static/plugins/${params.plugin || ''}/${params.filename}`, {encoding: 'utf-8'});
+            let fileContent = await fs.readFileSync(`/mnt/srv/web_static/plugins/${params.plugin || ''}/${params.filename}`, {encoding: 'utf-8'});
             let txt = fileContent || '';
             return this.json({status: 200, message: '成功', data: { content: txt, plugin: params.plugin, filename: params.filename }});
           } else {
@@ -226,7 +226,7 @@ module.exports = class extends enkel.controller.base {
           let uploadedFile = await this.upload({
             accept: params.accept,
             size: Number(params.ms) * 1024,
-            uploadDir: `/srv/web_static/plugins/${params.p}`,
+            uploadDir: `/mnt/srv/web_static/plugins/${params.p}`,
             rename: params.rn || false,
             multiples: false
           });
@@ -264,7 +264,7 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 1001, message: '保存失败，缺少参数', data: {}});
     }
     let _fileContent = params.content;
-    let _pluginPath = `/srv/web_static/plugins/${params.plugin}`;
+    let _pluginPath = `/mnt/srv/web_static/plugins/${params.plugin}`;
     let _pluginFilePath = `${_pluginPath}/${params.filename}`;
     if (!fs.existsSync(_pluginPath)) {
       fs.mkdirSync(_pluginPath);
@@ -301,7 +301,7 @@ module.exports = class extends enkel.controller.base {
       if (!_isLegalLogin) {
         return this.json({status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true }});
       } else {
-        let pluginRootPath = '/srv/web_static/plugins';
+        let pluginRootPath = '/mnt/srv/web_static/plugins';
         try {
           let uploadedFile = await this.upload({
             accept: params.accept,
