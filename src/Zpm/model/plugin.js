@@ -30,6 +30,10 @@ module.exports = {
     updateTime: {
       type: Sequelize.STRING,
       defaultValue: (+new Date())
+    },
+    reviewTime: {
+      type: Sequelize.STRING,
+      defaultValue: ''
     }
   },
   relations: {
