@@ -373,7 +373,7 @@ module.exports = class extends enkel.controller.base {
       if (!_isLegalLogin) {
         return this.json({status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true }});
       } else {
-        let avatarPath = '/srv/web_static/plugins_admin/img';
+        let avatarPath = '/mnt/srv/web_static/plugins_admin/img';
         try {
           let uploadedFile = await this.upload({
             accept: params.accept,
