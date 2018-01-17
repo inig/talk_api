@@ -146,10 +146,6 @@ module.exports = class extends enkel.controller.base {
     if (!this.checkLogin({username: params.phonenum, token: params.token})) {
       return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
     } else {
-      let _count = await this.MessageModel.count({where: {uuid: params.uuid}});
-      if (_count > 0) {
-        return this.json({status: 200, message: '添加成功'});
-      }
       let updateData = await this.MessageModel.update({
         readTime: params.readTime || (+new Date()),
         status: 2
