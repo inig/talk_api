@@ -135,7 +135,7 @@ module.exports = class extends enkel.controller.base {
    * 将消息转为已读
    * @returns {Promise.<*|{line, column}|number>}
    */
-  async readAction () {
+  async updateAction () {
     if (!this.isPost()) {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
     }
@@ -146,10 +146,12 @@ module.exports = class extends enkel.controller.base {
     if (!this.checkLogin({username: params.phonenum, token: params.token})) {
       return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
     } else {
-      let updateData = await this.MessageModel.update({
-        readTime: params.readTime || (+new Date()),
-        status: 2
-      }, {
+      let _updateKey = {};
+      _updateKey.status = params.status || 1
+      if (params.status === 2) {
+        _updateKey.readTime = params.readTime || (+new Date())
+      }
+      let updateData = await this.MessageModel.update(_updateKey, {
         where: {
           uuid: params.uuid,
         }
