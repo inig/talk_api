@@ -227,4 +227,42 @@ module.exports = class extends enkel.controller.base {
       }
     }
   }
+
+  async countAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+    } else {
+      try {
+        let count = await this.MessageModel.count({
+          where: {
+            status: Number(params.status)
+          }
+        });
+        return this.json({
+          status: 200,
+          message: '查询成功',
+          data: {
+            status: Number(params.status),
+            count: count
+          }
+        })
+      } catch (err) {
+        return this.json({
+          status: 1001,
+          message: '查询失败',
+          data: {
+            status: Number(params.status),
+            count: 0
+          }
+        })
+      }
+    }
+  }
 }
