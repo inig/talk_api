@@ -244,7 +244,8 @@ module.exports = class extends enkel.controller.base {
       try {
         let count = await this.MessageModel.count({
           where: {
-            status: Number(params.status)
+            status: Number(params.status),
+            toPhonenum: params.phonenum
           }
         });
         return this.json({
