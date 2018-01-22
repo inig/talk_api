@@ -209,9 +209,7 @@ module.exports = class extends enkel.controller.base {
       }
       try {
           let pluginsData = await this.PluginModel.findAll({
-              where: {
-
-              }
+              where: _searchConditions
           });
           let outPlugins = [];
           if (pluginsData.length > 0) {
