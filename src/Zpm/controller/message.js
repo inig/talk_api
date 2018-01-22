@@ -148,7 +148,7 @@ module.exports = class extends enkel.controller.base {
     } else {
       let _updateKey = {};
       _updateKey.status = params.status || 1
-      if (params.status === 2) {
+      if (Number(params.status) === 2) {
         _updateKey.readTime = params.readTime || (+new Date())
       }
       let updateData = await this.MessageModel.update(_updateKey, {
