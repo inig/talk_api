@@ -113,7 +113,11 @@ module.exports = class extends enkel.controller.base {
       // 默认查找开发者
       let role = params.role || 3;
       if (String(role) !== '-1') {
-          _searchConditions.role = role
+          _searchConditions.role = role;
+      }
+      let status = params.status || 1;
+      if (String(status) !== '-1') {
+          _searchConditions.status = status;
       }
       try {
           let usersData = await this.UserModel.findAll({
@@ -194,12 +198,19 @@ module.exports = class extends enkel.controller.base {
       let queryPhonenums = await this.getPhonenumByUsername({
           username: params.username
       });
+      let _searchConditions = {
+        author: {
+          [this.Op.in]: queryPhonenums
+        }
+      };
+      let status = params.status || 3;
+      if (String(status) !== '-1') {
+          _searchConditions.status = status;
+      }
       try {
           let pluginsData = await this.PluginModel.findAll({
               where: {
-                  author: {
-                      [this.Op.in]: queryPhonenums
-                  }
+
               }
           });
           let outPlugins = [];
