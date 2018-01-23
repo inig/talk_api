@@ -243,7 +243,8 @@ module.exports = class extends enkel.controller.base {
         phonenum: params.phonenum,
         nickname: '',
         gender: 1,
-        plugins: ''
+        plugins: '',
+        role: 3
       });
       let count = await this.UserModel.count({where: {phonenum: params.phonenum}});
       return this.json({status: 200, message: count > 0 ? '注册成功' : '注册失败', data: {}});
