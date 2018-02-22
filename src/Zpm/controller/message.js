@@ -51,7 +51,7 @@ module.exports = class extends enkel.controller.base {
   }
 
   indexAction () {
-    return this.json({status: 200, message: '成功', data: {}});
+    return this.json({status: 200, message: '成功2', data: {}});
   }
 
   async checkLogin (args) {

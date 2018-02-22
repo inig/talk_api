@@ -37,6 +37,7 @@ module.exports = {
   app_port: 3000,
   default_group: 'Home',
   groups: ['Home', 'Zpm'],
+  default_static: ['Static', '.well-known'], // 静态资源目录
   db: {
     ban: false, // 是否使用数据库 Sequelize
     type: 'mysql', // 数据库类型，支持mysql, sqlite, postgres, mssql
