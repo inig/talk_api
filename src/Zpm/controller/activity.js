@@ -229,12 +229,46 @@ module.exports = class extends enkel.controller.base {
       let updateData = await this.ActivityModel.update(_updateKey, {
         where: {
           uuid: params.uuid,
+          author: params.phonenum
         }
       });
       if (updateData[0] > 0) {
         return this.json({status: 200, message: '成功', data: { uuid: params.uuid }});
       } else {
         return this.json({status: 1001, message: '失败', data: { uuid: params.uuid }});
+      }
+    }
+  }
+
+  /**
+   * 获取活动模板数据
+   * @returns {Promise.<*|{line, column}|number>}
+   */
+  async getTemplateDataAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!params.uuid || params.uuid === '') {
+      return this.json({status: 401, message: '缺少活动id', data: {}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+    } else {
+      let templateData = await this.ActivityModel.find({
+        where: {
+          uuid: params.uuid,
+          author: params.phonenum
+        },
+        attributes: {exclude: ['id']}
+      })
+      if (templateData) {
+        return this.json({status: 200, message: '成功', data: templateData});
+      } else {
+        return this.json({status: 1001, message: '查找失败', data: { uuid: params.uuid }})
       }
     }
   }
