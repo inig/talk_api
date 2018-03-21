@@ -21,7 +21,7 @@ module.exports = {
     },
     data: {
       type: Sequelize.TEXT,
-      defaultValue: {}
+      defaultValue: '{}'
     },
     status: {
       type: Sequelize.INTEGER,

@@ -184,7 +184,7 @@ module.exports = class extends enkel.controller.base {
           thumbnail: params.thumbnail,
           desc: params.desc,
           uuid: _uuid,
-          data: JSON.stringify(params.data || {}),
+          data: params.data || '{}',
           status: 1
         });
         let count = await this.ActivityModel.count({where: {uuid: _uuid}});
@@ -270,6 +270,31 @@ module.exports = class extends enkel.controller.base {
       } else {
         return this.json({status: 1001, message: '查找失败', data: { uuid: params.uuid }})
       }
+    }
+  }
+
+  /**
+   * 活动预览 获取活动模板数据
+   * 不需要登录
+   */
+  async getPreviewTemplateDataAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.uuid || params.uuid === '') {
+      return this.json({status: 401, message: '缺少活动id', data: {}});
+    }
+    let templateData = await this.ActivityModel.find({
+      where: {
+        uuid: params.uuid
+      },
+      attributes: {exclude: ['id']}
+    })
+    if (templateData) {
+      return this.json({status: 200, message: '成功', data: templateData});
+    } else {
+      return this.json({status: 1001, message: '查找失败', data: { uuid: params.uuid }})
     }
   }
 }
