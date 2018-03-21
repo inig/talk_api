@@ -406,6 +406,40 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
+  async uploadScreenshotAction() {
+    let params = this.get();
+    if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
+      return this.json({ status: 401, message: '保存失败', data: { needLogin: true } });
+    } else {
+      let _isLegalLogin = this.checkLogin({
+        username: params.phonenum,
+        token: params.token
+      });
+      if (!_isLegalLogin) {
+        return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
+      } else {
+        let screenshotPath = '/mnt/srv/web_static/plugins_admin/img';
+        try {
+          let uploadedFile = await this.upload({
+            accept: params.accept,
+            size: Number(params.ms) * 1024,
+            uploadDir: screenshotPath,
+            rename: params.rn || false,
+            multiples: false
+          });
+          let fileUrl = `https://static.dei2.com/plugins_admin/img/${uploadedFile.filename}`;
+          return this.json({
+            status: 200, message: '上传成功', data: {
+              path: fileUrl
+            }
+          });
+        } catch (err) {
+          return this.json({ status: 401, message: JSON.stringify(err) || '', data: {} });
+        }
+      }
+    }
+  }
+
   async listAction () {
       if (!this.isPost()) {
           return this.json({status: 405, message: '请求方法不正确', data: {}});
