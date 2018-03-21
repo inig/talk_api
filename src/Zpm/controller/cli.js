@@ -36,6 +36,7 @@
 const fs = require('fs')
 const path = require('path')
 const jwt = require('jsonwebtoken');
+const axios = require('axios')
 const AdmZip = require('adm-zip');
 const secret = 'com.dei2';
 module.exports = class extends enkel.controller.base {
@@ -313,5 +314,34 @@ module.exports = class extends enkel.controller.base {
       } catch (err) {
           return this.json({status: 1001, message: '失败', data: {plugins: []}});
       }
+  }
+
+  async ajaxAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    let _url = ''
+    let _method = 'POST'
+    if (params.url) {
+      _url = params.url
+      delete params.url
+    }
+    if (params.method) {
+      _method = params.method
+      delete params.method
+    }
+    return axios({
+      url: _url,
+      method: _method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify(params)
+    }).then(res => {
+      return this.json({status: 200, message: '成功', data: res.data})
+    }).catch(err => {
+      return this.json({status: 401, message: err.message, data: {}})
+    })
   }
 }
