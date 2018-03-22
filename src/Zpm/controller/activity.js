@@ -133,7 +133,7 @@ module.exports = class extends enkel.controller.base {
           offset: (pageIndex - 1) * pageSize,
           attributes: {exclude: ['id']},
           order: [
-            ['createdAt', 'DESC']
+            ['updatedAt', 'DESC']
           ]
         });
         if (activityList) {
@@ -238,6 +238,35 @@ module.exports = class extends enkel.controller.base {
         return this.json({status: 1001, message: '失败', data: { uuid: params.uuid }});
       }
     }
+  }
+
+  async deleteAction () {
+      if (!this.isPost()) {
+          return this.json({status: 405, message: '请求方法不正确', data: {}});
+      }
+      let params = await this.post();
+      if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+          return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      }
+      if (!params.uuid || params.uuid === '') {
+          return this.json({status: 401, message: '缺少活动id', data: {}});
+      }
+      if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+          return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
+      } else {
+          let deleteData = await this.ActivityModel.destroy({
+              where: {
+                  uuid: params.uuid,
+                  author: params.phonenum
+              }
+          });
+          console.log('......删除：', typeof deleteData, deleteData);
+          if (deleteData > 0) {
+              return this.json({status: 200, message: '删除成功', data: {uuid: params.uuid}});
+          } else {
+              return this.json({status: 1001, message: '删除失败', data: {uuid: params.uuid}});
+          }
+      }
   }
 
   /**
