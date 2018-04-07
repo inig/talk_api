@@ -39,145 +39,280 @@ const jwt = require('jsonwebtoken');
 const AdmZip = require('adm-zip');
 const secret = 'com.dei2';
 module.exports = class extends enkel.controller.base {
-  init (http) {
-    super.init(http);
+    init(http) {
+        super.init(http);
 
-    this.ArticleModel = this.models('Zpm/article');
-    this.UserModel = this.models('Zpm/user');
+        this.ArticleModel = this.models('Zpm/article');
+        this.UserModel = this.models('Zpm/user');
 
-    this.response.setHeader('Access-Control-Allow-Origin', '*');
-    this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
-    this.response.setHeader('Access-Control-Allow-Methods', '*');
+        this.ArticleModel.belongsTo(this.UserModel, {
+            // as: 'user',
+            foreignKey: 'author',
+            targetKey: 'phonenum'
+        })
 
-    this.Op = this.Sequelize.Op
-  }
+        this.response.setHeader('Access-Control-Allow-Origin', '*');
+        this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
+        this.response.setHeader('Access-Control-Allow-Methods', '*');
 
-  indexAction () {
-    return this.json({status: 200, message: '成功'})
-  }
-
-  async addArticleAction () {
-    await this.ArticleModel.create({
-      title: '郭树清领衔银保监会9人领导班子：7名副主席排序有讲究',
-      author: '18000000000'
-    });
-    let count = await this.ArticleModel.count();
-    return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
-  }
-
-  async checkLogin (args) {
-    if (!args.token || args.token === '') {
-      return false;
+        this.Op = this.Sequelize.Op
     }
-    let _status = jwt.verify(args.token, secret, (err, decoded) => {
-      return err || {};
-    });
-    if (_status.name === 'TokenExpiredError') {
-      return false;
-    } else {
-      let loginUser = await this.UserModel.findOne({where: {username: args.username}});
-      if (!loginUser) {
-        loginUser = await this.UserModel.findOne({where: {phonenum: args.username}});
-        if (!loginUser) {
-          return false;
-        } else {}
-      } else {}
-      if (loginUser.token === '') {
-        return false;
-      } else {
-        let _storeTokenStatus = jwt.verify(args.token, secret, (err, decoded) => {
-          return err || {};
+
+    indexAction() {
+        return this.json({status: 200, message: '成功'})
+    }
+
+    async addArticleAction() {
+        await this.ArticleModel.create({
+            title: '郭树清领衔银保监会9人领导班子：7名副主席排序有讲究',
+            author: '18000000000'
         });
-        if (_storeTokenStatus.name === 'TokenExpiredError') {
-          return false;
-        } else {
-        }
-        return true;
-      }
+        let count = await this.ArticleModel.count();
+        return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
     }
-  }
 
-  async listAction () {
-    if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
-    }
-    let params = await this.post();
-    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
-    }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
-    } else {
-      try {
-        let _searchCondition = JSON.parse(JSON.stringify(params));
-        if (_searchCondition.token) {
-          delete _searchCondition.token
+    async checkLogin(args) {
+        if (!args.token || args.token === '') {
+            return false;
         }
-        if (_searchCondition.phonenum) {
-          delete _searchCondition.phonenum
-        }
-        if (_searchCondition.pageIndex) {
-          delete _searchCondition.pageIndex
-        }
-        if (_searchCondition.pageSize) {
-          delete _searchCondition.pageSize
-        }
-        let pageIndex = Number(params.pageIndex) || 1;
-        let pageSize = Number(params.pageSize) || 30;
-
-        let articleList = await this.ArticleModel.findAll({
-          where: _searchCondition,
-          limit: pageSize,
-          offset: (pageIndex - 1) * pageSize,
-          attributes: {exclude: ['id', 'content']},
-          order: [
-            ['postTime', 'DESC']
-          ]
+        let _status = jwt.verify(args.token, secret, (err, decoded) => {
+            return err || {};
         });
-        if (articleList) {
-          let _countAll = await this.ArticleModel.count({
-            where: _searchCondition
-          });
-          return this.json({status: 200, message: '查询成功', data: {
-            list: articleList || [],
-            count: articleList.length,
-            pageIndex: pageIndex,
-            pageSize: pageSize,
-            totalCounts: _countAll,
-            total: Math.ceil(_countAll / pageSize)
-          }});
+        if (_status.name === 'TokenExpiredError') {
+            return false;
         } else {
-          return this.json({status: 200, message: '查询成功', data: {
-            list: [],
-            count: 0,
-            pageIndex: pageIndex,
-            pageSize: pageSize
-          }});
+            let loginUser = await this.UserModel.findOne({where: {username: args.username}});
+            if (!loginUser) {
+                loginUser = await this.UserModel.findOne({where: {phonenum: args.username}});
+                if (!loginUser) {
+                    return false;
+                } else {
+                }
+            } else {
+            }
+            if (loginUser.token === '') {
+                return false;
+            } else {
+                let _storeTokenStatus = jwt.verify(args.token, secret, (err, decoded) => {
+                    return err || {};
+                });
+                if (_storeTokenStatus.name === 'TokenExpiredError') {
+                    return false;
+                } else {
+                }
+                return true;
+            }
         }
-      } catch (error) {
-        return this.json({status: 403, message: error.message, data: {}});
-      }
     }
-  }
 
-  async contentAction () {
-    if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    async listAction() {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+        }
+        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+            return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+        } else {
+            try {
+                let _searchCondition = JSON.parse(JSON.stringify(params));
+                if (_searchCondition.token) {
+                    delete _searchCondition.token
+                }
+                if (_searchCondition.phonenum) {
+                    delete _searchCondition.phonenum
+                }
+                if (_searchCondition.pageIndex) {
+                    delete _searchCondition.pageIndex
+                }
+                if (_searchCondition.pageSize) {
+                    delete _searchCondition.pageSize
+                }
+                if (_searchCondition.offsetCount) {
+                    delete _searchCondition.offsetCount
+                }
+                let pageIndex = Number(params.pageIndex) || 1;
+                let pageSize = Number(params.pageSize) || 30;
+                let offsetCount = Number(params.offsetCount) || 0
+
+                // 关联查询
+                let articleList = await this.ArticleModel.findAll({
+                    where: _searchCondition,
+                    limit: pageSize,
+                    offset: (pageIndex - 1) * pageSize + offsetCount,
+                    attributes: {exclude: ['id', 'content']},
+                    include: [{
+                        model: this.UserModel,
+                        // as: 'user2',
+                        attributes: {
+                            exclude: ['id', 'password', 'token']
+                        }
+                    }],
+                    order: [
+                        ['updateTime', 'DESC']
+                    ]
+                });
+                if (articleList) {
+                    let _countAll = await this.ArticleModel.count({
+                        where: _searchCondition
+                    });
+                    return this.json({
+                        status: 200, message: '查询成功', data: {
+                            list: articleList || [],
+                            count: articleList.length,
+                            pageIndex: pageIndex,
+                            pageSize: pageSize,
+                            totalCounts: _countAll,
+                            total: Math.ceil((_countAll - offsetCount) / pageSize)
+                        }
+                    });
+                } else {
+                    return this.json({
+                        status: 200, message: '查询成功', data: {
+                            list: [],
+                            count: 0,
+                            pageIndex: pageIndex,
+                            pageSize: pageSize
+                        }
+                    });
+                }
+            } catch (error) {
+                return this.json({status: 403, message: error.message, data: {}});
+            }
+        }
     }
-    let params = await this.post();
-    if (!params.uuid || params.uuid === '') {
-      return this.json({status: 1001, message: '缺少文章id', data: {}});
+
+    async saveAction() {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.uuid || params.uuid === '') {
+            return this.json({status: 1001, message: '缺少文章id', data: {}});
+        }
+        // if ((!params.content || params.content === '') && (!params.contentUrl || params.contentUrl === '')) {
+        //     return this.json({status: 1001, message: '文章内容不能为空', data: {uuid: params.uuid}});
+        // }
+        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+        }
+        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+            return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+        } else {
+            let articleData = await this.ArticleModel.find({
+                where: {
+                    uuid: params.uuid
+                },
+                attributes: {exclude: ['id', 'content']}
+            })
+            if (!articleData) {
+                return this.json({status: 1001, message: '文章不存在', data: {uuid: params.uuid}})
+            } else {
+                if (String(params.phonenum) !== String(articleData.author)) {
+                    return this.json({status: 1001, message: '无修改权限', data: {uuid: params.uuid}});
+                }
+            }
+            try {
+                let _searchCondition = JSON.parse(JSON.stringify(params));
+                if (_searchCondition.token) {
+                    delete _searchCondition.token
+                }
+                if (_searchCondition.phonenum) {
+                    delete _searchCondition.phonenum
+                }
+                let _updateKey = {};
+                if (params.title) {
+                    _updateKey.title = params.title
+                }
+                if (params.content) {
+                    _updateKey.content = params.content
+                } else if (params.contentUrl) {
+                    _updateKey.contentUrl = params.contentUrl
+                } else {}
+                _updateKey.updateTime = (+new Date());
+                let updateData = await this.ArticleModel.update(_updateKey, {
+                    where: {
+                        uuid: params.uuid
+                    }
+                });
+                if (updateData[0] > 0) {
+                    return this.json({ status: 200, message: '成功', data: { uuid: params.uuid } });
+                } else {
+                    return this.json({ status: 1001, message: '失败', data: { uuid: params.uuid } });
+                }
+            } catch (error) {
+                return this.json({status: 403, message: error.message, data: {}});
+            }
+        }
     }
-    let articleDetail = await this.ArticleModel.find({
-      where: {
-        uuid: params.uuid
-      },
-      attributes: {exclude: ['id']}
-    });
-    if (articleDetail) {
-      return this.json({status: 200, message: '成功', data: articleDetail});
-    } else {
-      return this.json({status: 1001, message: '查找失败', data: { uuid: params.uuid }})
+
+    async contentAction() {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.uuid || params.uuid === '') {
+            return this.json({status: 1001, message: '缺少文章id', data: {}});
+        }
+        let articleDetail = await this.ArticleModel.find({
+            where: {
+                uuid: params.uuid
+            },
+            attributes: {exclude: ['id']}
+        });
+        if (articleDetail) {
+            return this.json({status: 200, message: '成功', data: articleDetail});
+        } else {
+            return this.json({status: 1001, message: '查找失败', data: {uuid: params.uuid}})
+        }
     }
-  }
+
+    async createAction() {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+        }
+        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+            return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+        } else {
+            try {
+                let _searchCondition = JSON.parse(JSON.stringify(params));
+                if (_searchCondition.token) {
+                    delete _searchCondition.token
+                }
+                if (_searchCondition.phonenum) {
+                    delete _searchCondition.phonenum
+                }
+                let createdData = await this.ArticleModel.create({
+                    title: params.title,
+                    author: params.phonenum,
+                    postTime: +new Date(),
+                    updateTime: +new Date()
+                });
+                let userData = await this.UserModel.find({
+                    where: {
+                        phonenum: params.phonenum
+                    },
+                    attributes: {exclude: ['id', 'password']}
+                })
+                if (createdData) {
+                    let _createdData = JSON.parse(JSON.stringify(createdData))
+                    if (_createdData.hasOwnProperty('id')) {
+                        delete _createdData.id
+                    }
+                    _createdData['zpm_user'] = userData
+                    return this.json({status: 200, message: '成功', data: _createdData});
+                } else {
+                    return this.json({status: 1001, message: '失败', data: {}})
+                }
+            } catch (error) {
+                return this.json({status: 403, message: error.message, data: {}});
+            }
+        }
+    }
 }
