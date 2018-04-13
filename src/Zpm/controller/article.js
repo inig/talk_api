@@ -184,6 +184,77 @@ module.exports = class extends enkel.controller.base {
         }
     }
 
+  /**
+   * 查询文章列表，不需要登录状态
+   * @returns {Promise.<*|{line, column}|number>}
+   */
+  async getAllAction () {
+      if (!this.isPost()) {
+          return this.json({status: 405, message: '请求方法不正确', data: {}});
+      }
+      let params = await this.post();
+      let _searchConditions = JSON.parse(JSON.stringify(params));
+      if (_searchConditions.pageIndex) {
+        delete _searchConditions.pageIndex
+      }
+      if (_searchConditions.pageSize) {
+        delete _searchConditions.pageSize
+      }
+      if (_searchConditions.offsetCount) {
+        delete _searchConditions.offsetCount
+      }
+      let pageIndex = Number(params.pageIndex) || 1;
+      let pageSize = Number(pageIndex.pageSize) || 30;
+      let offsetCount = Number(params.offsetCount) || 0;
+      try {
+          let articleList = await this.ArticleModel.findAll({
+            where: _searchConditions,
+            limit: pageSize,
+            offset: (pageIndex - 1) * pageSize + offsetCount,
+            attributes: {
+              exclude: ['id', 'content']
+            },
+            include: [
+              {
+                model: this.UserModel,
+                attributes: {
+                  exclude: ['id', 'password', 'token']
+                }
+              }
+            ],
+            order: [
+              ['updateTime', 'DESC']
+            ]
+          });
+        if (articleList) {
+          let _countAll = await this.ArticleModel.count({
+            where: _searchConditions
+          });
+          return this.json({
+            status: 200, message: '查询成功', data: {
+              list: articleList || [],
+              count: articleList.length,
+              pageIndex: pageIndex,
+              pageSize: pageSize,
+              totalCounts: _countAll,
+              total: Math.ceil((_countAll - offsetCount) / pageSize)
+            }
+          });
+        } else {
+          return this.json({
+            status: 200, message: '查询成功', data: {
+              list: [],
+              count: 0,
+              pageIndex: pageIndex,
+              pageSize: pageSize
+            }
+          });
+        }
+      } catch (error) {
+        return this.json({status: 403, message: error.message, data: {}});
+      }
+    }
+
     async saveAction() {
         if (!this.isPost()) {
             return this.json({status: 405, message: '请求方法不正确', data: {}});
