@@ -204,7 +204,7 @@ module.exports = class extends enkel.controller.base {
         delete _searchConditions.offsetCount
       }
       let pageIndex = Number(params.pageIndex) || 1;
-      let pageSize = Number(pageIndex.pageSize) || 30;
+      let pageSize = Number(params.pageSize) || 30;
       let offsetCount = Number(params.offsetCount) || 0;
       try {
           let articleList = await this.ArticleModel.findAll({
@@ -212,7 +212,7 @@ module.exports = class extends enkel.controller.base {
             limit: pageSize,
             offset: (pageIndex - 1) * pageSize + offsetCount,
             attributes: {
-              exclude: ['id', 'content']
+              exclude: ['id']
             },
             include: [
               {
@@ -274,7 +274,9 @@ module.exports = class extends enkel.controller.base {
         } else {
             let articleData = await this.ArticleModel.find({
                 where: {
-                    uuid: params.uuid
+                    uuid: {
+                      [this.Op.like]: params.uuid + '%'
+                    }
                 },
                 attributes: {exclude: ['id', 'content']}
             })
@@ -305,7 +307,9 @@ module.exports = class extends enkel.controller.base {
                 _updateKey.updateTime = (+new Date());
                 let updateData = await this.ArticleModel.update(_updateKey, {
                     where: {
-                        uuid: params.uuid
+                        uuid: {
+                          [this.Op.like]: params.uuid + '%'
+                        }
                     }
                 });
                 if (updateData[0] > 0) {
@@ -329,8 +333,18 @@ module.exports = class extends enkel.controller.base {
         }
         let articleDetail = await this.ArticleModel.find({
             where: {
-                uuid: params.uuid
+                uuid: {
+                    [this.Op.like]: params.uuid + '%'
+                }
             },
+          include: [
+            {
+              model: this.UserModel,
+              attributes: {
+                exclude: ['id', 'password', 'token']
+              }
+            }
+          ],
             attributes: {exclude: ['id']}
         });
         if (articleDetail) {
