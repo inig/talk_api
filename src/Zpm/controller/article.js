@@ -61,12 +61,18 @@ module.exports = class extends enkel.controller.base {
 
     this.ArticleModel = this.models('Zpm/article');
     this.UserModel = this.models('Zpm/user');
+    this.CommentModel = this.models('Zpm/comment');
 
     this.ArticleModel.belongsTo(this.UserModel, {
       // as: 'user',
       foreignKey: 'author',
       targetKey: 'phonenum'
     })
+
+      this.ArticleModel.hasMany(this.CommentModel, {
+        foreignKey: 'aid',
+          sourceKey: 'uuid'
+      })
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
@@ -390,7 +396,13 @@ module.exports = class extends enkel.controller.base {
           attributes: {
             exclude: ['id', 'password', 'token']
           }
-        }
+        },
+          {
+            model: this.CommentModel,
+            attributes: {
+              exclude: ['id']
+            }
+          }
       ],
       attributes: {exclude: ['id']}
     });
