@@ -53,6 +53,12 @@ module.exports = {
     username: 'talkapi', // 用户名
     password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
   },
+  redis: {
+    ban: false, // 是否使用redis
+    host: '123.57.148.237', // redis地址
+    port: '6379', // redis端口
+    password: '*#redis*#' // redis密码
+  },
   socket: {
     ban: false, // 是否开启websocket
     port: '3010',
