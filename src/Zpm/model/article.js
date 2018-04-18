@@ -54,6 +54,36 @@ module.exports = {
       // 文章的审核时间
       type: Sequelize.STRING,
       defaultValue: ''
+    },
+    totalViews: {
+      // 文章的总浏览量
+      type: Sequelize.INTEGER,
+      defaultValue: 0
+    },
+    yesterdayViews: {
+      // 文章 昨日浏览量
+      type: Sequelize.INTEGER,
+      defaultValue: 0
+    },
+    todayViews: {
+      // 文章  今日浏览量
+      type: Sequelize.INTEGER,
+      defaultValue: 0
+    },
+    like: {
+      // 文章  点赞量
+      type: Sequelize.INTEGER,
+      defaultValue: 0
+    },
+    unlike: {
+      // 文章 踩
+      type: Sequelize.INTEGER,
+      defaultValue: 0
+    },
+    category: {
+      // 文章 类目
+      type: Sequelize.STRING,
+      defaultValue: ''
     }
   },
   relations: {
