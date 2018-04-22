@@ -59,20 +59,7 @@ module.exports = class extends enkel.controller.base {
 
     const that = this
 
-    this.ArticleModel = this.models('Zpm/article');
-    this.UserModel = this.models('Zpm/user');
     this.CommentModel = this.models('Zpm/comment');
-
-    this.ArticleModel.belongsTo(this.UserModel, {
-      // as: 'user',
-      foreignKey: 'author',
-      targetKey: 'phonenum'
-    })
-
-      this.ArticleModel.hasMany(this.CommentModel, {
-        foreignKey: 'aid',
-          sourceKey: 'uuid'
-      })
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
@@ -100,15 +87,6 @@ module.exports = class extends enkel.controller.base {
 
   indexAction () {
     return this.json({status: 200, message: '成功'})
-  }
-
-  async addArticleAction () {
-    await this.ArticleModel.create({
-      title: '郭树清领衔银保监会9人领导班子：7名副主席排序有讲究',
-      author: '18000000000'
-    });
-    let count = await this.ArticleModel.count();
-    return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
   }
 
   async checkLogin (args) {
@@ -150,79 +128,109 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
     }
     let params = await this.post();
-    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
-    }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
-    } else {
       try {
-        let _searchCondition = JSON.parse(JSON.stringify(params));
-        if (_searchCondition.token) {
-          delete _searchCondition.token
-        }
-        if (_searchCondition.phonenum) {
-          delete _searchCondition.phonenum
-        }
-        if (_searchCondition.pageIndex) {
-          delete _searchCondition.pageIndex
-        }
-        if (_searchCondition.pageSize) {
-          delete _searchCondition.pageSize
-        }
-        if (_searchCondition.offsetCount) {
-          delete _searchCondition.offsetCount
-        }
-        let pageIndex = Number(params.pageIndex) || 1;
-        let pageSize = Number(params.pageSize) || 30;
-        let offsetCount = Number(params.offsetCount) || 0
+          let _searchCondition = JSON.parse(JSON.stringify(params));
+          if (_searchCondition.token) {
+              delete _searchCondition.token
+          }
+          if (_searchCondition.phonenum) {
+              delete _searchCondition.phonenum
+          }
+          if (_searchCondition.pageIndex) {
+              delete _searchCondition.pageIndex
+          }
+          if (_searchCondition.pageSize) {
+              delete _searchCondition.pageSize
+          }
+          if (_searchCondition.offsetCount) {
+              delete _searchCondition.offsetCount
+          }
+          let pageIndex = Number(params.pageIndex) || 1;
+          let pageSize = Number(params.pageSize) || 30;
+          let offsetCount = Number(params.offsetCount) || 0
 
-        // 关联查询
-        let articleList = await this.ArticleModel.findAll({
-          where: _searchCondition,
-          limit: pageSize,
-          offset: (pageIndex - 1) * pageSize + offsetCount,
-          attributes: {exclude: ['id', 'content']},
-          include: [{
-            model: this.UserModel,
-            // as: 'user2',
-            attributes: {
-              exclude: ['id', 'password', 'token']
-            }
-          }],
-          order: [
-            ['updateTime', 'DESC']
-          ]
-        });
-        if (articleList) {
-          let _countAll = await this.ArticleModel.count({
-            where: _searchCondition
+          // 关联查询
+          let commentList = await this.CommentModel.findAll({
+              where: _searchCondition,
+              limit: pageSize,
+              offset: (pageIndex - 1) * pageSize + offsetCount,
+              attributes: {exclude: ['id']},
+              // include: [{
+              //     model: this.UserModel,
+              //     // as: 'user2',
+              //     attributes: {
+              //         exclude: ['id', 'password', 'token']
+              //     }
+              // }],
+              order: [
+                  ['postTime', 'DESC']
+              ]
           });
-          return this.json({
-            status: 200, message: '查询成功', data: {
-              list: articleList || [],
-              count: articleList.length,
-              pageIndex: pageIndex,
-              pageSize: pageSize,
-              totalCounts: _countAll,
-              total: Math.ceil((_countAll - offsetCount) / pageSize)
-            }
-          });
-        } else {
-          return this.json({
-            status: 200, message: '查询成功', data: {
-              list: [],
-              count: 0,
-              pageIndex: pageIndex,
-              pageSize: pageSize
-            }
-          });
-        }
+          if (commentList) {
+              let _countAll = await this.CommentModel.count({
+                  where: _searchCondition
+              });
+              return this.json({
+                  status: 200, message: '查询成功', data: {
+                      list: commentList || [],
+                      count: commentList.length,
+                      pageIndex: pageIndex,
+                      pageSize: pageSize,
+                      totalCounts: _countAll,
+                      total: Math.ceil((_countAll - offsetCount) / pageSize)
+                  }
+              });
+          } else {
+              return this.json({
+                  status: 200, message: '查询成功', data: {
+                      list: [],
+                      count: 0,
+                      pageIndex: pageIndex,
+                      pageSize: pageSize
+                  }
+              });
+          }
       } catch (error) {
-        return this.json({status: 403, message: error.message, data: {}});
+          return this.json({status: 403, message: error.message, data: {}});
       }
-    }
   }
+
+    /***
+     * 发表评论
+     * @returns {Promise<*|{line, column}|number>}
+     */
+    async commentAction () {
+        if (!this.isPost()) {
+            return this.json({status: 405, message: '请求方法不正确', data: {}});
+        }
+        let params = await this.post();
+        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+        }
+        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+            return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+        } else {
+            try {
+                let _searchCondition = JSON.parse(JSON.stringify(params));
+                if (_searchCondition.token) {
+                    delete _searchCondition.token
+                }
+                // if (_searchCondition.phonenum) {
+                //     delete _searchCondition.phonenum
+                // }
+                let createdData = await this.CommentModel.create(Object.assign({}, {
+                    postTime: +new Date()
+                }, _searchCondition));
+                if (createdData) {
+                    return this.json({status: 200, message: '成功', data: {}});
+                } else {
+                    return this.json({status: 1001, message: '失败', data: {}})
+                }
+            } catch (error) {
+                return this.json({status: 403, message: error.message, data: {}});
+            }
+        }
+    }
 
   /**
    * 查询文章列表，不需要登录状态
@@ -396,17 +404,16 @@ module.exports = class extends enkel.controller.base {
           attributes: {
             exclude: ['id', 'password', 'token']
           }
-        }
-        // ,
-        //   {
-        //     model: this.CommentModel,
-        //     attributes: {
-        //       exclude: ['id']
-        //     },
-        //     order: [
-        //         ['updatedAt', 'DESC']
-        //     ]
-        //   }
+        },
+          {
+            model: this.CommentModel,
+            attributes: {
+              exclude: ['id']
+            },
+            order: [
+                ['updatedAt', 'DESC']
+            ]
+          }
       ],
       attributes: {exclude: ['id']}
     });
@@ -467,5 +474,42 @@ module.exports = class extends enkel.controller.base {
         return this.json({status: 403, message: error.message, data: {}});
       }
     }
+  }
+
+    /***
+     * 发表评论
+     * @returns {Promise<*|{line, column}|number>}
+     */
+  async commentAction () {
+      if (!this.isPost()) {
+          return this.json({status: 405, message: '请求方法不正确', data: {}});
+      }
+      let params = await this.post();
+      if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+          return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      }
+      if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+          return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+      } else {
+        try {
+            let _searchCondition = JSON.parse(JSON.stringify(params));
+            if (_searchCondition.token) {
+                delete _searchCondition.token
+            }
+            // if (_searchCondition.phonenum) {
+            //     delete _searchCondition.phonenum
+            // }
+            let createdData = await this.CommentModel.create(Object.assign({}, {
+                postTime: +new Date()
+            }, _searchCondition));
+            if (createdData) {
+                return this.json({status: 200, message: '成功', data: {}});
+            } else {
+                return this.json({status: 1001, message: '失败', data: {}})
+            }
+        } catch (error) {
+            return this.json({status: 403, message: error.message, data: {}});
+        }
+      }
   }
 }

@@ -33,7 +33,7 @@ module.exports = {
         like: {
             // 评论的 点赞量，数据类型的字符串
             type: Sequelize.STRING,
-            defaultValue: ''
+            defaultValue: '[]'
         },
         postTime: {
             // 评论的时间
