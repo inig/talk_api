@@ -149,6 +149,11 @@ module.exports = class extends enkel.controller.base {
           let pageSize = Number(params.pageSize) || 30;
           let offsetCount = Number(params.offsetCount) || 0
 
+        if (_searchCondition.aid) {
+            _searchCondition.aid = {
+              [this.Op.like]: _searchCondition.aid + '%'
+            }
+        }
           // 关联查询
           let commentList = await this.CommentModel.findAll({
               where: _searchCondition,
@@ -194,43 +199,6 @@ module.exports = class extends enkel.controller.base {
           return this.json({status: 403, message: error.message, data: {}});
       }
   }
-
-    /***
-     * 发表评论
-     * @returns {Promise<*|{line, column}|number>}
-     */
-    async commentAction () {
-        if (!this.isPost()) {
-            return this.json({status: 405, message: '请求方法不正确', data: {}});
-        }
-        let params = await this.post();
-        if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-            return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
-        }
-        if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-            return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
-        } else {
-            try {
-                let _searchCondition = JSON.parse(JSON.stringify(params));
-                if (_searchCondition.token) {
-                    delete _searchCondition.token
-                }
-                // if (_searchCondition.phonenum) {
-                //     delete _searchCondition.phonenum
-                // }
-                let createdData = await this.CommentModel.create(Object.assign({}, {
-                    postTime: +new Date()
-                }, _searchCondition));
-                if (createdData) {
-                    return this.json({status: 200, message: '成功', data: {}});
-                } else {
-                    return this.json({status: 1001, message: '失败', data: {}})
-                }
-            } catch (error) {
-                return this.json({status: 403, message: error.message, data: {}});
-            }
-        }
-    }
 
   /**
    * 查询文章列表，不需要登录状态
@@ -503,7 +471,10 @@ module.exports = class extends enkel.controller.base {
                 postTime: +new Date()
             }, _searchCondition));
             if (createdData) {
-                return this.json({status: 200, message: '成功', data: {}});
+              if (createdData.id) {
+                delete createdData.id
+              }
+                return this.json({status: 200, message: '成功', data: createdData});
             } else {
                 return this.json({status: 1001, message: '失败', data: {}})
             }
