@@ -61,6 +61,7 @@ module.exports = {
   },
   socket: {
     ban: false, // 是否开启websocket
+    type: 'wss',
     port: '3010',
     userKey: 'phonenum', // 用户名
     namespace: '/sk',
