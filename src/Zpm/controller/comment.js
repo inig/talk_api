@@ -60,6 +60,7 @@ module.exports = class extends enkel.controller.base {
     const that = this
 
     this.CommentModel = this.models('Zpm/comment');
+    this.UserModel = this.models('Zpm/user');
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
