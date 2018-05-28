@@ -550,13 +550,15 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true }});
     } else {
       try {
+        let _queryCondition = {}
+        if (params.queryUsername && params.queryUsername.trim() !== '') {
+          _queryCondition.username = {
+            [this.Op.regexp]: `${params.queryUsername}`
+          }
+        }
         let queryUserList = await this.UserModel.findAll({
-          where: {
-            username: {
-              [this.Op.regexp]: `${params.queryUsername}`
-            }
-          },
-          attributes: {exclude: ['id', 'password']}
+          where: _queryCondition,
+          attributes: {exclude: ['id', 'password', 'token', 'updatedAt', 'lastLoginIp', 'createdAt']}
         });
         if (queryUserList) {
           return this.json({status: 200, message: '查询成功', data: {
