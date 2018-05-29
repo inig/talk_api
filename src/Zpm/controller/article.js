@@ -468,4 +468,62 @@ module.exports = class extends enkel.controller.base {
       }
     }
   }
+
+  /**
+   * 模糊搜索 文章列表
+   * searchKey: title content
+   * @returns {Promise.<*|{line, column}|number>}
+   */
+  async searchArticleAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+    } else {
+      let _searchCondition = {};
+      _searchCondition[params.searchType] = {
+        [this.Op.like]: params.searchValue + '%'
+      }
+      console.log('>>>>>>>>>>>', _searchCondition)
+      try {
+        let searchData = await this.ArticleModel.findAll({
+          where: _searchCondition,
+          attributes: {
+            exclude: ['id']
+          },
+          include: [
+            {
+              model: this.UserModel,
+              attributes: {
+                exclude: ['id', 'password', 'token']
+              }
+            }
+          ],
+          order: [
+            ['updateTime', 'DESC']
+          ]
+        })
+        if (searchData) {
+          return this.json({
+            status: 200, message: '查询成功', data: {
+              list: searchData || []
+            }
+          });
+        } else {
+          return this.json({
+            status: 200, message: '查询成功', data: {
+              list: []
+            }
+          });
+        }
+      } catch (error) {
+        return this.json({status: 403, message: error.message, data: { list: [] }});
+      }
+    }
+  }
 }
