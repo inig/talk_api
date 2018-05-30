@@ -62,7 +62,7 @@ module.exports = class extends enkel.controller.base {
     this.ArticleModel = this.models('Zpm/article');
     this.UserModel = this.models('Zpm/user');
     this.CommentModel = this.models('Zpm/comment');
-    this.TagMOdel = this.models('Zpm/tag');
+    this.TagModel = this.models('Zpm/tag');
 
     this.ArticleModel.belongsTo(this.UserModel, {
       // as: 'user',
@@ -115,7 +115,7 @@ module.exports = class extends enkel.controller.base {
   async addTagAction () {
     let params = this.get()
     if (params.text && (params.text.trim() !== '') && params.value && (params.value.trim() !== '')) {
-      await this.TagMOdel.create({
+      await this.TagModel.create({
         text: params.text.trim(),
         value: params.value.trim()
       })
@@ -499,7 +499,7 @@ module.exports = class extends enkel.controller.base {
    * searchKey: title content
    * @returns {Promise.<*|{line, column}|number>}
    */
-  async searchArticleAction () {
+  async searchAction () {
     if (!this.isPost()) {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
     }
