@@ -62,6 +62,7 @@ module.exports = class extends enkel.controller.base {
     this.ArticleModel = this.models('Zpm/article');
     this.UserModel = this.models('Zpm/user');
     this.CommentModel = this.models('Zpm/comment');
+    this.TagMOdel = this.models('Zpm/tag');
 
     this.ArticleModel.belongsTo(this.UserModel, {
       // as: 'user',
@@ -109,6 +110,29 @@ module.exports = class extends enkel.controller.base {
     });
     let count = await this.ArticleModel.count();
     return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
+  }
+
+  async addTagAction () {
+    let params = this.get()
+    if (params.text && (params.text.trim() !== '') && params.value && (params.value.trim() !== '')) {
+      await this.TagMOdel.create({
+        text: params.text.trim(),
+        value: params.value.trim()
+      })
+      return this.json({
+        status: 200,
+        message: '添加标签成功',
+        data: {
+          text: params.text.trim(),
+          value: params.value.trim()
+        }
+      })
+    } else {
+      return this.json({
+        status: 401,
+        message: '参数不合法'
+      })
+    }
   }
 
   async checkLogin (args) {
@@ -443,6 +467,7 @@ module.exports = class extends enkel.controller.base {
         }
         let createdData = await this.ArticleModel.create({
           title: params.title,
+          tag: params.tag,
           author: params.phonenum,
           postTime: +new Date(),
           updateTime: +new Date()
@@ -479,51 +504,62 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
     }
     let params = await this.post();
-    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
-    }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
-    } else {
-      let _searchCondition = {};
+    let _searchCondition = {};
+    let pageIndex = Number(params.pageIndex) || 1;
+    let pageSize = Number(params.pageSize) || 30;
+    let offsetCount = Number(params.offsetCount) || 0;
+    // 模糊查询 忽略大小写
+    if (params.searchValue && params.searchValue.trim() !== '') {
       _searchCondition[params.searchType] = {
-        [this.Op.like]: params.searchValue + '%'
+        [this.Op.regexp]: params.searchValue.replace(/([a-zA-Z])/g, function (item) { return '[' + item.toLowerCase() + item.toUpperCase() + ']' })
       }
-      console.log('>>>>>>>>>>>', _searchCondition)
-      try {
-        let searchData = await this.ArticleModel.findAll({
-          where: _searchCondition,
-          attributes: {
-            exclude: ['id']
-          },
-          include: [
-            {
-              model: this.UserModel,
-              attributes: {
-                exclude: ['id', 'password', 'token']
-              }
+    }
+    try {
+      let searchData = await this.ArticleModel.findAll({
+        where: _searchCondition,
+        limit: pageSize,
+        offset: (pageIndex - 1) * pageSize + offsetCount,
+        attributes: {
+          exclude: ['id']
+        },
+        include: [
+          {
+            model: this.UserModel,
+            attributes: {
+              exclude: ['id', 'password', 'token']
             }
-          ],
-          order: [
-            ['updateTime', 'DESC']
-          ]
-        })
-        if (searchData) {
-          return this.json({
-            status: 200, message: '查询成功', data: {
-              list: searchData || []
-            }
-          });
-        } else {
-          return this.json({
-            status: 200, message: '查询成功', data: {
-              list: []
-            }
-          });
-        }
-      } catch (error) {
-        return this.json({status: 403, message: error.message, data: { list: [] }});
+          }
+        ],
+        order: [
+          ['updateTime', 'DESC']
+        ]
+      })
+      if (searchData) {
+        let _countAll = await this.ArticleModel.count({
+          where: _searchCondition
+        });
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: searchData || [],
+            count: searchData.length,
+            pageIndex: pageIndex,
+            pageSize: pageSize,
+            totalCounts: _countAll,
+            total: Math.ceil((_countAll - offsetCount) / pageSize)
+          }
+        });
+      } else {
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: [],
+            count: 0,
+            pageIndex: pageIndex,
+            pageSize: pageSize
+          }
+        });
       }
+    } catch (error) {
+      return this.json({status: 403, message: error.message, data: { list: [] }});
     }
   }
 }
