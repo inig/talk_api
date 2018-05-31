@@ -496,7 +496,7 @@ module.exports = class extends enkel.controller.base {
 
   /**
    * 模糊搜索 文章列表
-   * searchKey: title content
+   * searchKey: title content author tag
    * @returns {Promise.<*|{line, column}|number>}
    */
   async searchAction () {
