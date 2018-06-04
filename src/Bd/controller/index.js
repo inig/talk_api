@@ -35,9 +35,22 @@
  */
 const CLIENT_ID = 'E0vrkHoQTODsnltW9GNSv8r9';
 const CLIENT_SECRET = 'kMp3RsnSu385dIrGHoY06GbwGh7r5QPC';
+const APP_ID = '11348934';
+
+const CLIENT_ID2 = 'G3OXT72HTkCXrrkIj1LZuwqu';
+const CLIENT_SECRET2 = 'ZXF5eSbatPXXkoiodteqHFBVArQ7GjVT';
+const APP_ID2 = '11350031';
 
 const axios = require('axios');
 const qs = require('querystring');
+const AipOcrClient = require('baidu-aip-sdk').ocr;
+const client = new AipOcrClient(APP_ID, CLIENT_ID, CLIENT_SECRET);
+
+const AipFaceClient = require('baidu-aip-sdk').face;
+const faceClient = new AipFaceClient(APP_ID2, CLIENT_ID2, CLIENT_SECRET2);
+
+const AipSpeechClient = require('baidu-aip-sdk').speech;
+const speechClient = new AipSpeechClient(APP_ID2, CLIENT_ID2, CLIENT_SECRET2);
 
 module.exports = class extends enkel.controller.base {
   init (http) {
@@ -125,6 +138,60 @@ module.exports = class extends enkel.controller.base {
           access_token: data.access_token
         }});
       }
+    }).catch(err => {
+      return this.json({status: 401, message: err.message, data: {}});
+    })
+  }
+
+  async webImageAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.at || (params.at.trim() === '')) {
+      return this.json({status: 1001, message: '缺少access_token', data: {}});
+    }
+    if (!params.image || (params.image.trim() === '')) {
+      return this.json({status: 1001, message: '缺少待识别的图片', data: {}});
+    }
+    let queryParams = {};
+    if (/^https?:\/\//.test(params.image + '')) {
+      // 图片url
+      queryParams.url = encodeURI(params.image)
+    } else if (/^data:image\//.test(params.image + '')) {
+      // 图片数据 base64
+      queryParams.image = params.image
+    } else {
+      queryParams.image = params.image
+      // return this.json({status: 1001, message: '图片数据不正确', data: {}});
+    }
+    var options = {};
+    options["face_field"] = "age,beauty,expression,faceshape,gender,glasses,landmark,race,quality,facetype,parsing";
+    options["max_face_num"] = "2";
+    options["face_type"] = "LIVE";
+    return speechClient.text2audio('老师：如果追求一个中国女孩，你请她吃什么? 小李：麻辣烫。 老师：韩国女孩呢? 小王：韩国泡菜。 老师：日本女孩呢? 小明：马赛克。 老师：滚出去!', {
+      per: 3
+    }).then(res => {
+      if (res.data) {
+        const fs = require('fs');
+        fs.writeFileSync('tts.mpVoice.mp3', res.data);
+      }
+      return this.json({status: 200, message: '成功', data: {}})
+    })
+    // return faceClient.detect(params.image, 'BASE64', options).then(res => {
+    //   console.log('>>>>>>>', res);
+    //   return this.json({status: 200, message: '成功', data: res})
+    // })
+    return axios({
+      url: 'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=' + params.at,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      data: queryParams
+    }).then(({data}) => {
+      console.log('.>>>>>>', data);
+      return this.json({status: 200, message: '成功', data: data});
     }).catch(err => {
       return this.json({status: 401, message: err.message, data: {}});
     })

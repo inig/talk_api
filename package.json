@@ -29,6 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "adm-zip": "^0.4.7",
+    "baidu-aip-sdk": "^2.3.1",
     "jsonwebtoken": "^8.1.0"
   }
 }
