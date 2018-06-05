@@ -200,7 +200,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async webImageAction () {
+  async detectFaceAction () {
     if (!this.isPost()) {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
     }
@@ -224,7 +224,7 @@ module.exports = class extends enkel.controller.base {
     }
     var options = {};
     options["face_field"] = "age,beauty,expression,faceshape,gender,glasses,race,quality,facetype";
-    options["max_face_num"] = "2";
+    options["max_face_num"] = "1";
     options["face_type"] = "LIVE";
     // return speechClient.text2audio('老师：如果追求一个中国女孩，你请她吃什么? 小李：麻辣烫。 老师：韩国女孩呢? 小王：韩国泡菜。 老师：日本女孩呢? 小明：马赛克。 老师：滚出去!', {
     //   per: 3
@@ -236,7 +236,6 @@ module.exports = class extends enkel.controller.base {
     //   return this.json({status: 200, message: '成功', data: {}})
     // })
     return faceClient.detect(params.image, 'BASE64', options).then(res => {
-      console.log('>>>>>>>', res);
       return this.json({status: 200, message: '成功', data: res})
     })
     return axios({
@@ -247,7 +246,6 @@ module.exports = class extends enkel.controller.base {
       },
       data: queryParams
     }).then(({data}) => {
-      console.log('.>>>>>>', data);
       return this.json({status: 200, message: '成功', data: data});
     }).catch(err => {
       return this.json({status: 401, message: err.message, data: {}});
@@ -295,7 +293,26 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 405, message: '请求方法不正确', data: {}});
     }
     let params = await this.post();
-    console.log('>>>>>', params)
     return this.json({status: 200, message: '成功', data: {}})
+  }
+
+  async uploadAction () {
+    const that = this
+    const formidable = require('formidable');
+    const fs = require('fs');
+    let form = new formidable.IncomingForm();
+    let files = [];
+    form
+      .on('file', function (field, file) {
+        files.push(file);
+      });
+
+    form.parse(enkel.request, function (err) {
+      if (err) {
+        return that.json({status: 201, message: err.message, data: {}});
+      }
+      let imageData = fs.readFileSync(files[0].path);
+      return that.json({status: 200, message: '成功', data: new Buffer(imageData).toString('base64')});
+    })
   }
 }
