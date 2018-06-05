@@ -33,6 +33,63 @@
 /**
  * Created by liangshan on 2017/11/13.
  */
+const FEMALES = [
+  {
+    name: '西施',
+    desc: '春秋战国时期出生于浙江诸暨苎萝村',
+    poetry: {
+      title: '',
+      author: '',
+      content: ''
+    }
+  },
+  {
+    name: '貂蝉',
+    desc: '',
+    poetry: ''
+  },
+  {
+    name: '王昭君',
+    desc: '',
+    poetry: '汉元帝时期南郡秭归（今湖北省兴山县）人'
+  },
+  {
+    name: '杨贵妃',
+    desc: '',
+    poetry: ''
+  },
+  {
+    name: '冯小怜',
+    desc: '',
+    poetry: ''
+  },
+  {
+    name: '苏妲己',
+    desc: '',
+    poetry: ''
+  },
+  {
+    name: '赵飞燕',
+    desc: '汉成帝刘骜的皇后，江都（今扬州）人',
+    poetry: ''
+  },
+  {
+    name: '褒姒',
+    desc: '',
+    poetry: ''
+  },
+  {
+    name: '甄宓',
+    desc: '',
+    poetry: ''
+  },
+  {
+    name: '李师师',
+    desc: '',
+    poetry: ''
+  }
+]
+
 const CLIENT_ID = 'E0vrkHoQTODsnltW9GNSv8r9';
 const CLIENT_SECRET = 'kMp3RsnSu385dIrGHoY06GbwGh7r5QPC';
 const APP_ID = '11348934';
@@ -166,22 +223,22 @@ module.exports = class extends enkel.controller.base {
       // return this.json({status: 1001, message: '图片数据不正确', data: {}});
     }
     var options = {};
-    options["face_field"] = "age,beauty,expression,faceshape,gender,glasses,landmark,race,quality,facetype,parsing";
+    options["face_field"] = "age,beauty,expression,faceshape,gender,glasses,race,quality,facetype";
     options["max_face_num"] = "2";
     options["face_type"] = "LIVE";
-    return speechClient.text2audio('老师：如果追求一个中国女孩，你请她吃什么? 小李：麻辣烫。 老师：韩国女孩呢? 小王：韩国泡菜。 老师：日本女孩呢? 小明：马赛克。 老师：滚出去!', {
-      per: 3
-    }).then(res => {
-      if (res.data) {
-        const fs = require('fs');
-        fs.writeFileSync('tts.mpVoice.mp3', res.data);
-      }
-      return this.json({status: 200, message: '成功', data: {}})
-    })
-    // return faceClient.detect(params.image, 'BASE64', options).then(res => {
-    //   console.log('>>>>>>>', res);
-    //   return this.json({status: 200, message: '成功', data: res})
+    // return speechClient.text2audio('老师：如果追求一个中国女孩，你请她吃什么? 小李：麻辣烫。 老师：韩国女孩呢? 小王：韩国泡菜。 老师：日本女孩呢? 小明：马赛克。 老师：滚出去!', {
+    //   per: 3
+    // }).then(res => {
+    //   if (res.data) {
+    //     const fs = require('fs');
+    //     fs.writeFileSync('tts.mpVoice.mp3', res.data);
+    //   }
+    //   return this.json({status: 200, message: '成功', data: {}})
     // })
+    return faceClient.detect(params.image, 'BASE64', options).then(res => {
+      console.log('>>>>>>>', res);
+      return this.json({status: 200, message: '成功', data: res})
+    })
     return axios({
       url: 'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=' + params.at,
       method: 'POST',
@@ -195,5 +252,50 @@ module.exports = class extends enkel.controller.base {
     }).catch(err => {
       return this.json({status: 401, message: err.message, data: {}});
     })
+  }
+
+  async imgAction () {
+    let params = this.get();
+    return axios({
+      url: params.image,
+      method: 'get'
+    }).then(res => {
+      return this.json({status: 200, message: '成功', data: (new Buffer(res.data)).toString('base64')});
+    }).catch(err => {
+      return this.json({status: 401, message: err.message, data: {}});
+    })
+  }
+
+  async img2Action () {
+    const http = require('https');
+    let params = this.get();
+    return new Promise((resolve, reject) => {
+      http.get(params.image, res => {
+        let chunks = [];
+        let size = 0;
+        res.on('data', chunk => {
+          chunks.push(chunk);
+          size += chunk.length;
+        });
+
+        res.on('end', err => {
+          if (err) {
+            reject(err.message);
+          }
+          let data = Buffer.concat(chunks, size);
+          resolve(data.toString('base64'));
+          return this.json({status: 200, message: '成功', data: data.toString('base64')})
+        })
+      })
+    })
+  }
+
+  async fileAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    console.log('>>>>>', params)
+    return this.json({status: 200, message: '成功', data: {}})
   }
 }
