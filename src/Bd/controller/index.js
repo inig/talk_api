@@ -38,57 +38,191 @@ const FEMALES = [
     name: '西施',
     desc: '春秋战国时期出生于浙江诸暨苎萝村',
     poetry: {
-      title: '',
-      author: '',
-      content: ''
+      title: '饮湖上初晴后雨',
+      author: '苏轼',
+      content: ['水光潋滟晴方好', '山色空蒙雨亦奇', '欲把西湖比西子', '淡妆浓抹总相宜']
     }
   },
   {
     name: '貂蝉',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '忆江南·貂蝉',
+      author: '贵谷子',
+      content: ['媚娇娘', '枭雄逐彷徨', '红罗纤算干戈止', '豆蔻闭月乱世生', '貂蝉何处寻']
+    }
   },
   {
     name: '王昭君',
     desc: '',
-    poetry: '汉元帝时期南郡秭归（今湖北省兴山县）人'
+    poetry: {
+      title: '五美吟·明妃',
+      author: '曹雪芹',
+      content: ['绝艳惊人出汉宫', '红颜命薄古今同', '君王纵使轻颜色', '予夺权何畀画工']
+    }
   },
   {
     name: '杨贵妃',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '清平调词',
+      author: '李白',
+      content: ['云想衣裳花想容', '春风拂槛露华浓', '若非群玉山头见', '会向瑶台月下逢']
+    }
   },
   {
     name: '冯小怜',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '冯小怜',
+      author: '李贺',
+      content: ['湾头见小怜,请上琵琶弦', '破得春风恨,今朝值几钱', '裙垂竹叶带,鬓湿杏花烟', '玉冷红丝重,齐宫妾驾鞭']
+    }
   },
   {
     name: '苏妲己',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '妲己图',
+      author: '杨维桢',
+      content: ['小白竿头血', '新图入汉廷', '宫中双燕子', '齐作牝鸡鸣']
+    }
   },
   {
     name: '赵飞燕',
     desc: '汉成帝刘骜的皇后，江都（今扬州）人',
-    poetry: ''
+    poetry: {
+      title: '汉宫曲',
+      author: '徐凝',
+      content: ['水色帘前流玉霜', '赵家飞燕侍昭阳', '掌中舞罢箫声绝', '三十六宫秋夜长']
+    }
+  },
+  {
+    name: '郑旦',
+    desc: '',
+    poetry: {
+      title: '拾遗记',
+      author: '王嘉',
+      content: ['越又有美女二人', '一名夷光', '二名修明郑旦', '以贡于吴', '吴处以椒华之房']
+    }
   },
   {
     name: '褒姒',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '十五夜观灯',
+      author: '卢照邻',
+      content: ['锦里开芳宴,兰缸艳早年', '缛彩遥分地,繁光远缀天', '接汉疑星落,依楼似月悬', '别有千金笑,来映九枝前']
+    }
   },
   {
     name: '甄宓',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '和梨花',
+      author: '文同',
+      content: ['素质静相依,清香暖更飞', '笑从风外歇,啼向雨中归', '江令歌琼树,甄妃梦玉衣', '画堂明月地,常此惜芳菲']
+    }
+  }
+];
+
+const MALES = [
+  {
+    name: '潘安',
+    desc: '',
+    poetry: {
+      title: '花底',
+      author: '杜甫',
+      content: ['紫萼扶千蕊,黄须照万花', '忽疑行暮雨,何事入朝霞', '恐是潘安县,堪留卫玠车', '深知好颜色,莫作委泥沙']
+    }
   },
   {
-    name: '李师师',
+    name: '卫玠',
     desc: '',
-    poetry: ''
+    poetry: {
+      title: '晋·卫玠',
+      author: '孙元晏',
+      content: ['叔宝羊车海内稀', '山家女婿好风姿', '江东士女无端甚', '看杀玉人浑不知']
+    }
+  },
+  {
+    name: '子都',
+    desc: '',
+    poetry: {
+      title: '告子上',
+      author: '孟子',
+      content: ['至于子都', '天下莫不知其姣也', '不知子都之姣者', '无目者也']
+    }
+  },
+  {
+    name: '宋文公',
+    desc: '',
+    poetry: {
+      title: '左传',
+      author: '左丘明',
+      content: ['宋公子鲍礼于国人', '公子鲍美而艳']
+    }
+  },
+  {
+    name: '宋玉',
+    desc: '',
+    poetry: {
+      title: '赠邻女',
+      author: '鱼玄机',
+      content: ['羞日遮罗袖,愁春懒起妆', '易求无价宝,难得有心郎', '枕上潜垂泪,花间暗断肠', '自能窥宋玉,何必恨王昌']
+    }
+  },
+  {
+    name: '兰陵王',
+    desc: '',
+    poetry: {
+      title: '念裕堂',
+      author: '王国维',
+      content: ['江南天子皆词客', '河北诸王尽将材', '乍歌乐府兰陵曲', '又见湘东玉轴灰']
+    }
+  },
+  {
+    name: '嵇康',
+    desc: '',
+    poetry: {
+      title: '艺苑卮言',
+      author: '王世贞',
+      content: ['每叹嵇生琴夏侯色', '今千古他人览之', '犹为不堪', '况其身乎']
+    }
+  },
+  {
+    name: '韩子高',
+    desc: '',
+    poetry: {
+      title: '',
+      author: '陈蒨',
+      content: ['昔闻周小史', '今歌月下人', '玉尘手不别', '羊车市若空', '谁愁两雄并', '金貂应让侬']
+    }
+  },
+  {
+    name: '慕容冲',
+    desc: '',
+    poetry: {
+      title: '资治通鉴',
+      author: '司马光',
+      content: ['冲有自得之志', '赏罚任情']
+    }
+  },
+  {
+    name: '独孤信',
+    desc: '',
+    poetry: {
+      title: '',
+      author: '元修',
+      content: ['世乱识贞良', '岂虚言哉']
+    }
   }
-]
+];
+
+const RESULTS = {
+  '1': MALES,
+  '2': FEMALES
+};
 
 const CLIENT_ID = 'E0vrkHoQTODsnltW9GNSv8r9';
 const CLIENT_SECRET = 'kMp3RsnSu385dIrGHoY06GbwGh7r5QPC';
@@ -314,5 +448,13 @@ module.exports = class extends enkel.controller.base {
       let imageData = fs.readFileSync(files[0].path);
       return that.json({status: 200, message: '成功', data: new Buffer(imageData).toString('base64')});
     })
+  }
+
+  async resultAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    return this.json({status: 200, message: '成功', data: RESULTS[String(params.gender)][9 - Math.floor(Number(params.score) / 10)]});
   }
 }
