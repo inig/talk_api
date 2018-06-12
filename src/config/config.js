@@ -36,7 +36,7 @@
 module.exports = {
   app_port: 3000,
   default_group: 'Home',
-  groups: ['Home', 'Zpm', 'Bd'],
+  groups: ['Home', 'Zpm', 'Bd', 'wx'],
   default_static: ['Static', '.well-known'], // 静态资源目录
   db: {
     ban: false, // 是否使用数据库 Sequelize
@@ -61,7 +61,7 @@ module.exports = {
   },
   socket: {
     ban: false, // 是否开启websocket
-    type: 'wss',
+    type: 'ws',
     port: '3010',
     userKey: 'phonenum', // 用户名
     namespace: '/sk',
