@@ -8,7 +8,7 @@ module.exports = {
     appId: {
       type: Sequelize.STRING
     },
-    token: {
+    ticket: {
       // access_token
       type: Sequelize.STRING
     },

@@ -41,6 +41,7 @@ module.exports = class extends enkel.controller.base {
     const that = this;
 
     this.AtModel = this.models('wx/at');
+    this.TicketModel = this.models('wx/ticket');
 
     this.getAsync = function (arg) {
       return new Promise((resolve, reject) => {
@@ -57,11 +58,11 @@ module.exports = class extends enkel.controller.base {
   }
 
   async getAccessTokenAction () {
-    const WX_ACCESS_TOKEN = 'wx_access_token';
     let appId = 'wxb98c89add806fba8';
+    const WX_ACCESS_TOKEN = 'wx_access_token_' + appId;
     let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
     let requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + appId + '&secret=' + appSecret;
-    const EXPIRED_IN = 5 * 1000;
+    const EXPIRED_IN = 7200 * 1000;
 
     const that = this;
     const _getAccessTokenFromApi = async function () {
@@ -79,6 +80,7 @@ module.exports = class extends enkel.controller.base {
         that.redis.pexpireat(WX_ACCESS_TOKEN, (+new Date()) + Number(EXPIRED_IN));
         // 写数据库
         await that.AtModel.create({
+          appId: appId,
           token: atDataFromApi.data.access_token,
           expired: (+new Date()) + Number(EXPIRED_IN)
         });
@@ -90,7 +92,11 @@ module.exports = class extends enkel.controller.base {
     let k = await this.getAsync(WX_ACCESS_TOKEN);
     if (!k) {
       // redis中不存在，则从数据库中找
-      let atData = await this.AtModel.findOne();
+      let atData = await this.AtModel.findOne({
+        where: {
+          appId: appId
+        }
+      });
       if (!atData) {
         // 数据库中不存在，则调接口获取access_token
         await _getAccessTokenFromApi();
@@ -115,19 +121,245 @@ module.exports = class extends enkel.controller.base {
       // redis中存在
       return this.json({status: 200, message: '成功', data: { access_token: k }});
     }
-    // return axios({
-    //   url: requestUrl,
-    //   method: 'GET',
-    //   headers: {
-    //     'Content-Type': 'application/x-www-form-urlencoded'
-    //   }
-    // }).then(({data}) => {
-    //   if (data.access_token && data.access_token !== '') {
-    //     // 获取 access_token成功，缓存access_token，有效期7200s。
-    //   }
-    //   return this.json({status: 200, message: '成功', data: data});
-    // }).catch(err => {
-    //   return this.json({status: 401, message: err.message, data: {}});
-    // })
+  }
+
+  async _getAccessToken () {
+    let appId = 'wxb98c89add806fba8';
+    const WX_ACCESS_TOKEN = 'wx_access_token_' + appId;
+    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    let requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + appId + '&secret=' + appSecret;
+    const EXPIRED_IN = 7200 * 1000;
+
+    const that = this;
+    const _getAccessTokenFromApi = async function () {
+      let atDataFromApi = await axios({
+        url: requestUrl,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+      if (atDataFromApi.data.access_token && atDataFromApi.data.access_token !== '') {
+        // 获取 access_token成功，缓存access_token，有效期7200s。
+        // 写redis
+        that.redis.set(WX_ACCESS_TOKEN, atDataFromApi.data.access_token);
+        that.redis.pexpireat(WX_ACCESS_TOKEN, (+new Date()) + Number(EXPIRED_IN));
+        // 写数据库
+        await that.AtModel.create({
+          appId: appId,
+          token: atDataFromApi.data.access_token,
+          expired: (+new Date()) + Number(EXPIRED_IN)
+        });
+        return atDataFromApi.data.access_token;
+      }
+    }
+
+    // 从redis中取access_token
+    let k = await this.getAsync(WX_ACCESS_TOKEN);
+    if (!k) {
+      // redis中不存在，则从数据库中找
+      let atData = await this.AtModel.findOne({
+        where: {
+          appId: appId
+        }
+      });
+      if (!atData) {
+        // 数据库中不存在，则调接口获取access_token
+        await _getAccessTokenFromApi();
+      } else {
+        // 数据库中存在，redis中不存在access_token
+        // 写redis
+        if ((+new Date()) >= Number(atData.expired)) {
+          // 数据库中的access_token已经过期
+          await this.AtModel.destroy({
+            where: {
+              token: atData.token
+            }
+          });
+          await _getAccessTokenFromApi();
+        } else {
+          this.redis.set(WX_ACCESS_TOKEN, atData.token);
+          this.redis.pexpireat(WX_ACCESS_TOKEN, (+new Date()) + Number(EXPIRED_IN));
+          return atData.token;
+        }
+      }
+    } else {
+      // redis中存在
+      return k;
+    }
+  }
+
+  async getJsApiTicketAction () {
+    let accessToken = this.get('at')
+    let appId = 'wxb98c89add806fba8';
+    const WX_JS_API_TICKET = 'wx_js_api_ticket_' + appId;
+    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    let requestUrl = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=' + accessToken + '&type=jsapi';
+    const EXPIRED_IN = 7200 * 1000;
+
+    const that = this;
+    const _getJsApiTicketFromApi = async function () {
+      let atDataFromApi = await axios({
+        url: requestUrl,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+      if ((atDataFromApi.data.errmsg === 'ok') && atDataFromApi.data.ticket && atDataFromApi.data.ticket !== '') {
+        // 获取 access_token成功，缓存access_token，有效期7200s。
+        // 写redis
+        that.redis.set(WX_JS_API_TICKET, atDataFromApi.data.ticket);
+        that.redis.pexpireat(WX_JS_API_TICKET, (+new Date()) + Number(EXPIRED_IN));
+        // 写数据库
+        await that.TicketModel.create({
+          appId: appId,
+          ticket: atDataFromApi.data.ticket,
+          expired: (+new Date()) + Number(EXPIRED_IN)
+        });
+        return that.json({status: 200, message: '成功', data: { ticket: atDataFromApi.data.ticket }});
+      }
+    }
+
+    // 从redis中取access_token
+    let k = await this.getAsync(WX_JS_API_TICKET);
+    if (!k) {
+      // redis中不存在，则从数据库中找
+      let atData = await this.TicketModel.findOne({
+        where: {
+          appId: appId
+        }
+      });
+      if (!atData) {
+        // 数据库中不存在，则调接口获取access_token
+        await _getJsApiTicketFromApi();
+      } else {
+        // 数据库中存在，redis中不存在access_token
+        // 写redis
+        if ((+new Date()) >= Number(atData.expired)) {
+          // 数据库中的access_token已经过期
+          await this.TicketModel.destroy({
+            where: {
+              ticket: atData.ticket
+            }
+          });
+          await _getJsApiTicketFromApi();
+        } else {
+          this.redis.set(WX_JS_API_TICKET, atData.ticket);
+          this.redis.pexpireat(WX_JS_API_TICKET, (+new Date()) + Number(EXPIRED_IN));
+          return this.json({status: 200, message: '成功', data: { ticket: atData.ticket }});
+        }
+      }
+    } else {
+      // redis中存在
+      return this.json({status: 200, message: '成功', data: { ticket: k }});
+    }
+  }
+
+  async _getJsApiTicket (at) {
+    let accessToken = at
+    let appId = 'wxb98c89add806fba8';
+    const WX_JS_API_TICKET = 'wx_js_api_ticket_' + appId;
+    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    let requestUrl = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=' + accessToken + '&type=jsapi';
+    const EXPIRED_IN = 7200 * 1000;
+
+    const that = this;
+    const _getJsApiTicketFromApi = async function () {
+      let atDataFromApi = await axios({
+        url: requestUrl,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+      if ((atDataFromApi.data.errmsg === 'ok') && atDataFromApi.data.ticket && atDataFromApi.data.ticket !== '') {
+        // 获取 access_token成功，缓存access_token，有效期7200s。
+        // 写redis
+        that.redis.set(WX_JS_API_TICKET, atDataFromApi.data.ticket);
+        that.redis.pexpireat(WX_JS_API_TICKET, (+new Date()) + Number(EXPIRED_IN));
+        // 写数据库
+        await that.TicketModel.create({
+          appId: appId,
+          ticket: atDataFromApi.data.ticket,
+          expired: (+new Date()) + Number(EXPIRED_IN)
+        });
+        return atDataFromApi.data.ticket;
+      }
+    }
+
+    // 从redis中取access_token
+    let k = await this.getAsync(WX_JS_API_TICKET);
+    if (!k) {
+      // redis中不存在，则从数据库中找
+      let atData = await this.TicketModel.findOne({
+        where: {
+          appId: appId
+        }
+      });
+      if (!atData) {
+        // 数据库中不存在，则调接口获取access_token
+        await _getJsApiTicketFromApi();
+      } else {
+        // 数据库中存在，redis中不存在access_token
+        // 写redis
+        if ((+new Date()) >= Number(atData.expired)) {
+          // 数据库中的access_token已经过期
+          await this.TicketModel.destroy({
+            where: {
+              ticket: atData.ticket
+            }
+          });
+          await _getJsApiTicketFromApi();
+        } else {
+          this.redis.set(WX_JS_API_TICKET, atData.ticket);
+          this.redis.pexpireat(WX_JS_API_TICKET, (+new Date()) + Number(EXPIRED_IN));
+          return atData.ticket;
+        }
+      }
+    } else {
+      // redis中存在
+      return k;
+    }
+  }
+
+  async getWxConfigAction () {
+    let url = await this.post('url');
+    let noncestr = Math.random().toString(36).substr(2, 15);
+    let timestamp = (parseInt((new Date().getTime() / 1000) + '') + '');
+    let _token = await this._getAccessToken();
+    let _ticket = await this._getJsApiTicket(_token);
+    console.log('..........', _ticket)
+
+    const raw = function (args) {
+      let keys = Object.keys(args);
+      keys = keys.sort()
+      let newArgs = {};
+      keys.forEach(function (key) {
+        newArgs[key.toLowerCase()] = args[key];
+      });
+
+      let string = '';
+      for (let k in newArgs) {
+        string += '&' + k + '=' + newArgs[k];
+      }
+      string = string.substr(1);
+      return string;
+    };
+    let ret = {
+      jsapi_ticket: _ticket,
+      nonceStr: noncestr,
+      timestamp: timestamp,
+      url: url
+    };
+    let string = raw(ret);
+    const jsSHA = require('jssha');
+    let shaObj = new jsSHA(string, 'TEXT');
+    ret.signature = shaObj.getHash('SHA-1', 'HEX');
+    if (ret.jsapi_ticket) {
+      delete ret.jsapi_ticket
+    }
+    ret.appId = 'wxb98c89add806fba8';
+    return this.json({status: 200, message: '成功', data: ret});
   }
 }
