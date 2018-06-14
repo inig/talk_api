@@ -47,7 +47,7 @@ const FEMALES = [
     name: '貂蝉',
     desc: '',
     poetry: {
-      title: '忆江南·貂蝉',
+      title: '忆江南 貂蝉',
       author: '贵谷子',
       content: ['媚娇娘', '枭雄逐彷徨', '红罗纤算干戈止', '豆蔻闭月乱世生', '貂蝉何处寻']
     }
@@ -56,7 +56,7 @@ const FEMALES = [
     name: '王昭君',
     desc: '',
     poetry: {
-      title: '五美吟·明妃',
+      title: '五美吟 明妃',
       author: '曹雪芹',
       content: ['绝艳惊人出汉宫', '红颜命薄古今同', '君王纵使轻颜色', '予夺权何畀画工']
     }
@@ -140,7 +140,7 @@ const MALES = [
     name: '卫玠',
     desc: '',
     poetry: {
-      title: '晋·卫玠',
+      title: '晋 卫玠',
       author: '孙元晏',
       content: ['叔宝羊车海内稀', '山家女婿好风姿', '江东士女无端甚', '看杀玉人浑不知']
     }
