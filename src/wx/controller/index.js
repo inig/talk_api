@@ -85,6 +85,8 @@ module.exports = class extends enkel.controller.base {
           expired: (+new Date()) + Number(EXPIRED_IN)
         });
         return that.json({status: 200, message: '成功', data: { access_token: atDataFromApi.data.access_token }});
+      } else {
+        return that.json({status: atDataFromApi.errcode || 1001, message: atDataFromApi.data.errmsg || '失败', data: {}});
       }
     }
 
