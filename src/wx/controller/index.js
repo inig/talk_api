@@ -34,6 +34,8 @@
  * Created by liangshan on 2017/11/13.
  */
 const axios = require('axios');
+const appId = 'wx06a726555d597a4b';
+const appSecret = '32741d837c9a22837491cb107ca9b463';
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http);
@@ -58,9 +60,9 @@ module.exports = class extends enkel.controller.base {
   }
 
   async getAccessTokenAction () {
-    let appId = 'wxb98c89add806fba8';
+    // let appId = 'wxb98c89add806fba8';
     const WX_ACCESS_TOKEN = 'wx_access_token_' + appId;
-    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    // let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
     let requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + appId + '&secret=' + appSecret;
     const EXPIRED_IN = 7200 * 1000;
 
@@ -126,9 +128,9 @@ module.exports = class extends enkel.controller.base {
   }
 
   async _getAccessToken () {
-    let appId = 'wxb98c89add806fba8';
+    // let appId = 'wxb98c89add806fba8';
     const WX_ACCESS_TOKEN = 'wx_access_token_' + appId;
-    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    // let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
     let requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + appId + '&secret=' + appSecret;
     const EXPIRED_IN = 7200 * 1000;
 
@@ -193,9 +195,9 @@ module.exports = class extends enkel.controller.base {
 
   async getJsApiTicketAction () {
     let accessToken = this.get('at')
-    let appId = 'wxb98c89add806fba8';
+    // let appId = 'wxb98c89add806fba8';
     const WX_JS_API_TICKET = 'wx_js_api_ticket_' + appId;
-    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    // let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
     let requestUrl = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=' + accessToken + '&type=jsapi';
     const EXPIRED_IN = 7200 * 1000;
 
@@ -260,9 +262,9 @@ module.exports = class extends enkel.controller.base {
 
   async _getJsApiTicket (at) {
     let accessToken = at
-    let appId = 'wxb98c89add806fba8';
+    // let appId = 'wxb98c89add806fba8';
     const WX_JS_API_TICKET = 'wx_js_api_ticket_' + appId;
-    let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
+    // let appSecret = '57726b87b2b7ac2e8144bf76887597f4';
     let requestUrl = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=' + accessToken + '&type=jsapi';
     const EXPIRED_IN = 7200 * 1000;
 
@@ -361,7 +363,7 @@ module.exports = class extends enkel.controller.base {
     if (ret.jsapi_ticket) {
       delete ret.jsapi_ticket
     }
-    ret.appId = 'wxb98c89add806fba8';
+    ret.appId = appId;
     return this.json({status: 200, message: '成功', data: ret});
   }
 }
