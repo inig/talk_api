@@ -35,7 +35,7 @@
  */
 const axios = require('axios');
 const appId = 'wx06a726555d597a4b';
-const appSecret = '32741d837c9a22837491cb107ca9b463';
+const appSecret = '84bd132e01e2beec3c9d6b922ef5a7b4';
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http);
@@ -193,6 +193,19 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
+  //从客户提供的api获取accesstoken，防止重复生成，超过2000次
+  async _getAccessTokenDicFromCustomer() {
+    let customerUrl = 'http://xiaohuashijie.medsagacityidea.com/get-appDevInfo';
+    //结构如下：
+    //{"accessToken":"11_ubxgGlqgA39YkYn6XodYu4Cik8Bg9IqQSvMXiqymaF4mDQ9yj7djXhB3pRNi947-cSqmMYVqy6FAz48OhfsQ7s8PXovNnOB_oDXdfvUi-AM_MzVo5LG-3Z7tUc-Nadl8H4LtDjmgK6ShjmbCVNNaAAAPHH",
+    //"secret":"84bd132e01e2beec3c9d6b922ef5a7b4","appid":"wx06a726555d597a4b"}
+    let accessTokenDic = await axios({
+      url: customerUrl,
+      method: 'GET'
+    });
+    return accessTokenDic || {};
+  }
+
   async getJsApiTicketAction () {
     let accessToken = this.get('at')
     // let appId = 'wxb98c89add806fba8';
@@ -327,12 +340,31 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
+  //实时获取ticket
+  async _getJsApiTicket2 (at) {
+    let accessToken = at;
+    let requestUrl = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=' + accessToken + '&type=jsapi';
+    let atDataFromApi = await axios({
+      url: requestUrl,
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+    if ((atDataFromApi.data.errmsg === 'ok') && atDataFromApi.data.ticket && atDataFromApi.data.ticket !== '') {
+      return atDataFromApi.data.ticket;
+    } else {
+      return '';
+    }
+  }
+
   async getWxConfigAction () {
     let url = await this.post('url');
     let noncestr = Math.random().toString(36).substr(2, 15);
     let timestamp = (parseInt((new Date().getTime() / 1000) + '') + '');
-    let _token = await this._getAccessToken();
-    let _ticket = await this._getJsApiTicket(_token);
+    let _tokenDic = await this._getAccessTokenDicFromCustomer();
+    let _token = _tokenDic.accessToken;
+    let _ticket = await this._getJsApiTicket2(_token);
     console.log('..........', _ticket)
 
     const raw = function (args) {
@@ -363,7 +395,7 @@ module.exports = class extends enkel.controller.base {
     if (ret.jsapi_ticket) {
       delete ret.jsapi_ticket
     }
-    ret.appId = appId;
+    ret.appId = _tokenDic.appId;
     return this.json({status: 200, message: '成功', data: ret});
   }
 }
