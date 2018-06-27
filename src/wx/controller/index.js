@@ -396,7 +396,7 @@ module.exports = class extends enkel.controller.base {
     if (ret.jsapi_ticket) {
       delete ret.jsapi_ticket
     }
-    ret.appId = _tokenDic.appId;
+    ret.appId = _tokenDic.appid;
     return this.json({status: 200, message: '成功', data: ret});
   }
 }
