@@ -207,10 +207,10 @@ module.exports = class extends enkel.controller.base {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     });
-    if (typeof(accessTokenDic) == 'string') {
-      accessTokenDic = JSON.parse(accessTokenDic);
+    if (typeof(accessTokenDic.data) == 'string') {
+      accessTokenDic = JSON.parse(accessTokenDic.data);
     }
-    return accessTokenDic || {};
+    return accessTokenDic.data || {};
   }
 
   async getJsApiTicketAction () {
@@ -372,7 +372,6 @@ module.exports = class extends enkel.controller.base {
     let _tokenDic = await this._getAccessTokenDicFromCustomer();
     let _token = _tokenDic.accessToken;
     let _ticket = _tokenDic.jsApiTicket;
-    console.log('..........', _ticket)
 
     const raw = function (args) {
       let keys = Object.keys(args);
