@@ -387,17 +387,18 @@ module.exports = class extends enkel.controller.base {
       jsapi_ticket: _ticket,
       nonceStr: noncestr,
       timestamp: timestamp,
-      url: url,
-      token: _token
+      url: url
     };
     let string = raw(ret);
     const jsSHA = require('jssha');
     let shaObj = new jsSHA(string, 'TEXT');
     ret.signature = shaObj.getHash('SHA-1', 'HEX');
-    // if (ret.jsapi_ticket) {
-    //   delete ret.jsapi_ticket
-    // }
+    if (ret.jsapi_ticket) {
+      delete ret.jsapi_ticket
+    }
     ret.appId = _tokenDic.appid;
+    ret.token = _tokenDic.accessToken;
+    ret.ticket = _tokenDic.jsApiTicket;
     return this.json({status: 200, message: '成功', data: ret});
   }
 }
