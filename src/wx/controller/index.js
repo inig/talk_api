@@ -197,7 +197,8 @@ module.exports = class extends enkel.controller.base {
   async _getAccessTokenDicFromCustomer() {
     let customerUrl = 'http://xiaohuashijie.medsagacityidea.com/get-appDevInfo';
     //结构如下：
-    //{"accessToken":"11_ubxgGlqgA39YkYn6XodYu4Cik8Bg9IqQSvMXiqymaF4mDQ9yj7djXhB3pRNi947-cSqmMYVqy6FAz48OhfsQ7s8PXovNnOB_oDXdfvUi-AM_MzVo5LG-3Z7tUc-Nadl8H4LtDjmgK6ShjmbCVNNaAAAPHH",
+    //{"jsApiTicket":"kgt8ON7yVITDhtdwci0qeXkLh1zDw3lNuXxrVjTaHTUbt9n4PVM1VRcxbKwMocvxFom7ppIzqntswwGWBf0yfw",
+    //"accessToken":"11_cVaoZE76YugaHecHkKbnIvtSrRbd62wDPoXVDT9SxooO9pON_jCpC1dkjDypZUSbYvogYKXWX4RkM8GM9vwvWAKaSZ79ptD0lzTYlNudse8DemANOpq5hcp--fUP9_5jFOWjQFKCeY_KjiPFTHRfAJAKYI",
     //"secret":"84bd132e01e2beec3c9d6b922ef5a7b4","appid":"wx06a726555d597a4b"}
     let accessTokenDic = await axios({
       url: customerUrl,
@@ -364,7 +365,7 @@ module.exports = class extends enkel.controller.base {
     let timestamp = (parseInt((new Date().getTime() / 1000) + '') + '');
     let _tokenDic = await this._getAccessTokenDicFromCustomer();
     let _token = _tokenDic.accessToken;
-    let _ticket = await this._getJsApiTicket2(_token);
+    let _ticket = _tokenDic.jsApiTicket;
     console.log('..........', _ticket)
 
     const raw = function (args) {
