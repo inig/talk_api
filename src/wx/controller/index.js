@@ -202,8 +202,14 @@ module.exports = class extends enkel.controller.base {
     //"secret":"84bd132e01e2beec3c9d6b922ef5a7b4","appid":"wx06a726555d597a4b"}
     let accessTokenDic = await axios({
       url: customerUrl,
-      method: 'GET'
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
+    if (typeof(accessTokenDic) == 'string') {
+      accessTokenDic = JSON.parse(accessTokenDic);
+    }
     return accessTokenDic || {};
   }
 
