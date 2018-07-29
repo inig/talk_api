@@ -495,6 +495,53 @@ module.exports = class extends enkel.controller.base {
   }
 
   /**
+   * 修改文章标签
+   * @returns {Promise<*|{line, column}|number>}
+   */
+  async modifyTagAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+    }
+    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
+      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+    } else {
+      try {
+        let _searchCondition = JSON.parse(JSON.stringify(params));
+        if (_searchCondition.token) {
+          delete _searchCondition.token
+        }
+        if (_searchCondition.phonenum) {
+          delete _searchCondition.phonenum
+        }
+        let createdData = await this.ArticleModel.update({
+          tag: params.tag
+        }, {
+          where: {
+            uuid: {
+              [this.Op.like]: params.uuid + '%'
+            }
+          }
+        });
+        if (createdData) {
+          let _createdData = JSON.parse(JSON.stringify(createdData))
+          if (_createdData.hasOwnProperty('id')) {
+            delete _createdData.id
+          }
+          return this.json({status: 200, message: '成功', data: _createdData});
+        } else {
+          return this.json({status: 1001, message: '失败', data: {}})
+        }
+      } catch (error) {
+        return this.json({status: 403, message: error.message, data: {}});
+      }
+    }
+  }
+
+  /**
    * 模糊搜索 文章列表
    * searchKey: title content author tag
    * @returns {Promise.<*|{line, column}|number>}
