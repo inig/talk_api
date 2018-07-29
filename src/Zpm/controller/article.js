@@ -575,6 +575,12 @@ module.exports = class extends enkel.controller.base {
             attributes: {
               exclude: ['id', 'password', 'token']
             }
+          },
+          {
+            model: this.CommentModel,
+            attributes: {
+              exclude: ['id', 'password', 'token']
+            }
           }
         ],
         order: [
