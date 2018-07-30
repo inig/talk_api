@@ -468,6 +468,7 @@ module.exports = class extends enkel.controller.base {
         let createdData = await this.ArticleModel.create({
           title: params.title,
           tag: params.tag,
+          album: params.album,
           author: params.phonenum,
           postTime: +new Date(),
           updateTime: +new Date()
@@ -517,9 +518,13 @@ module.exports = class extends enkel.controller.base {
         if (_searchCondition.phonenum) {
           delete _searchCondition.phonenum
         }
-        let createdData = await this.ArticleModel.update({
+        let _requestData = {
           tag: params.tag
-        }, {
+        }
+        if (params.album && params.album.trim() !== '') {
+          _requestData.album = params.album
+        }
+        let createdData = await this.ArticleModel.update(_requestData, {
           where: {
             uuid: {
               [this.Op.like]: params.uuid + '%'
