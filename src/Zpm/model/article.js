@@ -15,11 +15,18 @@ module.exports = {
     },
     content: {
       // 文章的内容，不能与contentUrl(文章的内容的外链)同时为空
-      type: Sequelize.TEXT
+      type: Sequelize.TEXT,
+      defaultValue: ''
     },
     contentUrl: {
       // 文章的内容的外链，不能与content(文章内容)同时为空
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+      defaultValue: ''
+    },
+    album: {
+      // 文章封面图片
+      type: Sequelize.STRING,
+      defaultValue: ''
     },
     author: {
       // 文章的作者
