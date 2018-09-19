@@ -344,4 +344,16 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 401, message: err.message, data: {}})
     })
   }
+
+  async aAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    let params = await this.post();
+    return axios(params).then(res => {
+      return this.json({status: 200, message: '成功', data: res})
+    }).catch(err => {
+      return this.json({status: 401, message: err.message, data: {}})
+    })
+  }
 }
