@@ -352,7 +352,7 @@ module.exports = class extends enkel.controller.base {
     let params = await this.post();
     if (params.data && typeof params.data === 'string') {
       try {
-        params.data = JSON.parse(params.data)
+        params.data = JSON.parse(params.data);
       } catch (e) {
         params.data = params.data
       }
