@@ -39,6 +39,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios')
 const AdmZip = require('adm-zip');
 const secret = 'com.dei2';
+const qs = require('qs');
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http);
@@ -357,8 +358,15 @@ module.exports = class extends enkel.controller.base {
         params.data = params.data
       }
     }
+    if (params.headers && typeof params.headers === 'string') {
+      try {
+        params.headers = qs.parse(params.headers);
+      } catch (e) {
+        params.headers = {}
+      }
+    }
     return axios(params).then(res => {
-      return this.json({status: 200, message: '成功', data: res.data})
+      return this.json({status: 200, message: '成功', data: Object.assign({}, res, {request: {}})})
     }).catch(err => {
       return this.json({status: 401, message: err.message, data: {}})
     })
