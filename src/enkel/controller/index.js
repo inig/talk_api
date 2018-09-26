@@ -31,40 +31,76 @@
  **                                              不见满街漂亮妹，哪个归得程序员？
  */
 /**
- * Created by liangshan on 2017/11/14.
+ * Created by liangshan on 2017/11/13.
  */
-module.exports = {
-  app_port: 3000,
-  default_group: 'Home',
-  groups: ['Home', 'Zpm', 'Bd', 'wx', 'enkel'],
-  default_static: ['Static', '.well-known'], // 静态资源目录
-  db: {
-    ban: false, // 是否使用数据库 Sequelize
-    type: 'mysql', // 数据库类型，支持mysql, sqlite, postgres, mssql
-    storage: '', // 仅限SQLite
-      host: '127.0.0.1', // 数据库地址
-      port: '3306', // 数据库端口
-      db_name: 'enkel', // 数据库名
-      username: 'root', // 用户名
-      password: 'root' // 密码
-    // host: '123.57.148.237', // 数据库地址
-    // port: '3306', // 数据库端口
-    // db_name: 'talkapi', // 数据库名
-    // username: 'talkapi', // 用户名
-    // password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
-  },
-  redis: {
-    ban: true, // 是否使用redis
-    host: '123.57.148.237', // redis地址
-    port: '6379', // redis端口
-    password: '*#redis*#' // redis密码
-  },
-  socket: {
-    ban: true, // 是否开启websocket
-    type: 'wss',
-    port: '3010',
-    userKey: 'phonenum', // 用户名
-    namespace: '/sk',
-    events: ['enkel-message']
+const cheerio = require('cheerio');
+const axios = require('axios');
+
+module.exports = class extends enkel.controller.base {
+  init (http) {
+    super.init(http);
+
+    this.response.setHeader('Access-Control-Allow-Origin', '*');
+    this.response.setHeader('Access-Control-Allow-Headers', '*');
+    this.response.setHeader('Access-Control-Allow-Methods', '*');
+  }
+
+  getCookie (name) {
+    if (!this.request.headers || !this.request.headers.cookies) {
+      return (!name ? {} : '')
+    }
+    let _cookies = this.request.headers.cookies.replace(/; /g, ';')
+    let outObj = {}
+    if (_cookies.trim() === '') {
+      if (!name) {
+        return {}
+      } else {
+        return ''
+      }
+    }
+    let _cookiesArr = _cookies.split(';')
+    for (let i = 0; i < _cookiesArr.length; i++) {
+      if (!outObj.hasOwnProperty(_cookiesArr[i].split('=')[0])) {
+        outObj[_cookiesArr[i].split('=')[0]] = _cookiesArr[i].split('=')[1]
+      }
+    }
+    if (!name) {
+      return outObj
+    } else {
+      return outObj[name] || ''
+    }
+  }
+
+  checkAuth () {
+    let enkelCookie = this.getCookie('enkel')
+    if (!enkelCookie || enkelCookie.trim() !== '9d935f95a1630e1282ae9861f16fcf0b') {
+      return false
+    } else {
+      return true
+    }
+  }
+
+  async indexAction () {
+    if (!this.isPost()) {
+      return this.json({status: 405, message: '请求方法不正确', data: {}});
+    }
+    if (!this.checkAuth()) {
+      return this.json({status: 1001, message: '请求不合法', data: {}})
+    }
+    let params = await this.post();
+    let requestUrl = 'https://ip.cn/index.php'
+    if (params.ip) {
+      requestUrl += '?ip=' + params.ip
+    }    
+    return axios.get(requestUrl).catch(err => {
+      return this.json({status: 1002, message: '查询失败，请稍后再试', data: {}})
+    }).then(({data}) => {
+      const $ = cheerio.load(data)
+      return this.json({status: 200, message: '成功', data: {
+        ip: $('#result').find('code').eq(0).text(),
+        address: $('#result').find('code').eq(1).text(),
+        geoIp: $('#result').html().replace(/(.*geoip:)([^<]*)(<\/p>.*)/i, '$2').trim()
+      }})
+    })
   }
 }
