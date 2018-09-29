@@ -42,25 +42,25 @@ module.exports = {
     ban: false, // 是否使用数据库 Sequelize
     type: 'mysql', // 数据库类型，支持mysql, sqlite, postgres, mssql
     storage: '', // 仅限SQLite
-      host: '127.0.0.1', // 数据库地址
-      port: '3306', // 数据库端口
-      db_name: 'enkel', // 数据库名
-      username: 'root', // 用户名
-      password: 'root' // 密码
-    // host: '123.57.148.237', // 数据库地址
-    // port: '3306', // 数据库端口
-    // db_name: 'talkapi', // 数据库名
-    // username: 'talkapi', // 用户名
-    // password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
+      // host: '127.0.0.1', // 数据库地址
+      // port: '3306', // 数据库端口
+      // db_name: 'enkel', // 数据库名
+      // username: 'root', // 用户名
+      // password: 'root' // 密码
+    host: '123.57.148.237', // 数据库地址
+    port: '3306', // 数据库端口
+    db_name: 'talkapi', // 数据库名
+    username: 'talkapi', // 用户名
+    password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
   },
   redis: {
-    ban: true, // 是否使用redis
+    ban: false, // 是否使用redis
     host: '123.57.148.237', // redis地址
     port: '6379', // redis端口
     password: '*#redis*#' // redis密码
   },
   socket: {
-    ban: true, // 是否开启websocket
+    ban: false, // 是否开启websocket
     type: 'wss',
     port: '3010',
     userKey: 'phonenum', // 用户名

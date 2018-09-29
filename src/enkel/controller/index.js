@@ -35,6 +35,7 @@
  */
 const cheerio = require('cheerio');
 const axios = require('axios');
+const qs = require('querystring');
 
 module.exports = class extends enkel.controller.base {
   init (http) {
@@ -100,6 +101,68 @@ module.exports = class extends enkel.controller.base {
         ip: $('#result').find('code').eq(0).text(),
         address: $('#result').find('code').eq(1).text(),
         geoIp: $('#result').html().replace(/(.*geoip:)([^<]*)(<\/p>.*)/i, '$2').trim()
+      }})
+    })
+  }
+
+  getPinyinToken () {
+    return new Promise(resolve => {
+      let requestUrl = 'https://www.qqxiuzi.cn/zh/pinyin/'
+      axios.get(requestUrl).catch(err => {
+        resolve('')
+      }).then(({data}) => {
+        const $ = cheerio.load(data)
+        let _token = $('head').html().replace(/\r/ig, '').replace(/\n|\s/ig, '')
+        _token = _token.replace(/(.*&token=)([a-z0-9_]*)('.*)/i, '$2').trim()
+        resolve(_token)
+      })
+    })    
+  }
+
+  async pinyinAction () {
+    // if (!this.isPost()) {
+    //   return this.json({status: 405, message: '请求方法不正确', data: {}});
+    // }
+    // if (!this.checkAuth()) {
+    //   return this.json({status: 1001, message: '请求不合法', data: {}})
+    // }
+    let _token = await this.getPinyinToken()
+    if (!_token) {
+      return this.json({status: 1002, message: '转换失败，请稍后再试', data: {}});
+    }
+    // let params = await this.post();
+    let params = this.get();
+    let requestUrl = 'https://www.qqxiuzi.cn/zh/pinyin/show.php'
+    if (!params.t) {
+      return this.json({status: 200, message: '成功', data: {result: ''}})
+    }
+    let requestParams = {
+      t: params.t,
+      d: 1,
+      s: null,
+      k: 1,
+      b: null,
+      h: null,
+      u: null,
+      v: null,
+      y: null,
+      z: null,
+      f: null,
+      token: _token
+    }
+    console.log('>@@@@@@@@@@', requestParams)
+    return axios({
+      method: 'post',
+      url: requestUrl + '?' + qs.stringify(requestParams),
+      header: {
+        'Content-type': 'application/x-www-form-urlencoded'
+      }
+    }).catch(err => {
+      return this.json({status: 1002, message: '转换失败，请稍后再试', data: {}})
+    }).then(({data}) => {
+      console.log('>>>>,,,,,,,,,', data)
+      return this.json({status: 200, message: '成功', data: {
+        result: data
       }})
     })
   }
