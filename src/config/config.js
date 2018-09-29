@@ -54,7 +54,7 @@ module.exports = {
     password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
   },
   redis: {
-    ban: false, // 是否使用redis
+    ban: true, // 是否使用redis
     host: '123.57.148.237', // redis地址
     port: '6379', // redis端口
     password: '*#redis*#' // redis密码

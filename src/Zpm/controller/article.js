@@ -85,18 +85,18 @@ module.exports = class extends enkel.controller.base {
     //   that.client.psubscribe('__keyevent@0__:expired')
     // })
 
-    this.getAsync = function (arg) {
-      return new Promise((resolve, reject) => {
-        that.redis.get(arg, (err, p) => {
-          if (err) {
-            reject(new Error('error'))
-          }
-          resolve(p)
-        })
-      }).catch(err => {
-        return err.message
-      })
-    }
+    // this.getAsync = function (arg) {
+    //   return new Promise((resolve, reject) => {
+    //     that.redis.get(arg, (err, p) => {
+    //       if (err) {
+    //         reject(new Error('error'))
+    //       }
+    //       resolve(p)
+    //     })
+    //   }).catch(err => {
+    //     return err.message
+    //   })
+    // }
   }
 
   indexAction () {
@@ -398,15 +398,15 @@ module.exports = class extends enkel.controller.base {
       return this.json({status: 1001, message: '缺少文章id', data: {}});
     }
 
-    let _totalViews = REDIS_KEYS.TOTAL_VIEW.replace('{{ARTICLE_ID}}', params.uuid)
-    let _todayViews = REDIS_KEYS.TODAY_VIEW.replace('{{ARTICLE_ID}}', params.uuid)
-    this.redis.incrby(_totalViews, 1)
-    this.redis.incrby(_todayViews, 1)
+    // let _totalViews = REDIS_KEYS.TOTAL_VIEW.replace('{{ARTICLE_ID}}', params.uuid)
+    // let _todayViews = REDIS_KEYS.TODAY_VIEW.replace('{{ARTICLE_ID}}', params.uuid)
+    // this.redis.incrby(_totalViews, 1)
+    // this.redis.incrby(_todayViews, 1)
     // this.redis.on("pmessage", (pattern, channel, eventKey) => {
     // });
 
     // this.redis.pexpireat(_todayViews, getEndOfToday() + 18 * 60 * 60 * 1000 + 2 * 60 * 1000)
-    this.redis.pexpireat(_todayViews, getEndOfToday() + 24 * 60 * 60 * 1000)
+    // this.redis.pexpireat(_todayViews, getEndOfToday() + 24 * 60 * 60 * 1000)
 
     let articleDetail = await this.ArticleModel.find({
       where: {
@@ -437,10 +437,11 @@ module.exports = class extends enkel.controller.base {
     if (articleDetail) {
       let _totalViewsCount = await this.getAsync(_totalViews)
       let _todayViewsCount = await this.getAsync(_todayViews) || 0
-      return this.json({status: 200, message: '成功', data: Object.assign({}, articleDetail.dataValues, {
-        totalViews: _totalViewsCount,
-        todayViews: _todayViewsCount
-      })});
+      return this.json({status: 200, message: '成功', data: Object.assign({}, articleDetail.dataValues)});
+      //   , {
+      //   totalViews: _totalViewsCount,
+      //   todayViews: _todayViewsCount
+      // })});
     } else {
       return this.json({status: 1001, message: '查找失败', data: {uuid: params.uuid}})
     }
