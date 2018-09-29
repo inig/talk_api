@@ -408,42 +408,46 @@ module.exports = class extends enkel.controller.base {
     // this.redis.pexpireat(_todayViews, getEndOfToday() + 18 * 60 * 60 * 1000 + 2 * 60 * 1000)
     // this.redis.pexpireat(_todayViews, getEndOfToday() + 24 * 60 * 60 * 1000)
 
-    let articleDetail = await this.ArticleModel.find({
-      where: {
-        uuid: {
-          [this.Op.like]: params.uuid + '%'
-        }
-      },
-      include: [
-        {
-          model: this.UserModel,
-          attributes: {
-            exclude: ['id', 'password', 'token']
+    try {
+      let articleDetail = await this.ArticleModel.find({
+        where: {
+          uuid: {
+            [this.Op.like]: params.uuid + '%'
           }
-        }
-        // ,
-        //   {
-        //     model: this.CommentModel,
-        //     attributes: {
-        //       exclude: ['id']
-        //     },
-        //     order: [
-        //         ['updatedAt', 'DESC']
-        //     ]
-        //   }
-      ],
-      attributes: {exclude: ['id']}
-    });
-    if (articleDetail) {
-      let _totalViewsCount = await this.getAsync(_totalViews)
-      let _todayViewsCount = await this.getAsync(_todayViews) || 0
-      return this.json({status: 200, message: '成功', data: Object.assign({}, articleDetail.dataValues)});
-      //   , {
-      //   totalViews: _totalViewsCount,
-      //   todayViews: _todayViewsCount
-      // })});
-    } else {
-      return this.json({status: 1001, message: '查找失败', data: {uuid: params.uuid}})
+        },
+        include: [
+          {
+            model: this.UserModel,
+            attributes: {
+              exclude: ['id', 'password', 'token']
+            }
+          }
+          // ,
+          //   {
+          //     model: this.CommentModel,
+          //     attributes: {
+          //       exclude: ['id']
+          //     },
+          //     order: [
+          //         ['updatedAt', 'DESC']
+          //     ]
+          //   }
+        ],
+        attributes: {exclude: ['id']}
+      });
+      if (articleDetail) {
+        // let _totalViewsCount = await this.getAsync(_totalViews)
+        // let _todayViewsCount = await this.getAsync(_todayViews) || 0
+        return this.json({status: 200, message: '成功', data: Object.assign({}, articleDetail.dataValues)});
+        //   , {
+        //   totalViews: _totalViewsCount,
+        //   todayViews: _todayViewsCount
+        // })});
+      } else {
+        return this.json({status: 1001, message: '查找失败', data: {uuid: params.uuid}})
+      }
+    } catch (err) {
+      return this.json({status: 1005, message: err.message})
     }
   }
 
