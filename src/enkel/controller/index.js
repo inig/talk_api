@@ -38,7 +38,7 @@ const axios = require('axios');
 const qs = require('querystring');
 
 module.exports = class extends enkel.controller.base {
-  init (http) {
+  init(http) {
     super.init(http);
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
@@ -46,7 +46,7 @@ module.exports = class extends enkel.controller.base {
     this.response.setHeader('Access-Control-Allow-Methods', '*');
   }
 
-  getCookie (name) {
+  getCookie(name) {
     if (!this.request.headers || !this.request.headers.cookies) {
       return (!name ? {} : '')
     }
@@ -72,7 +72,7 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  checkAuth () {
+  checkAuth() {
     let enkelCookie = this.getCookie('enkel')
     if (!enkelCookie || enkelCookie.trim() !== '9d935f95a1630e1282ae9861f16fcf0b') {
       return false
@@ -81,45 +81,73 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async indexAction () {
+  async indexAction() {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     if (!this.checkAuth()) {
-      return this.json({status: 1001, message: '请求不合法', data: {}})
+      return this.json({ status: 1001, message: '请求不合法', data: {} })
     }
     let params = await this.post();
     let requestUrl = 'https://ip.cn/index.php'
     if (params.ip) {
       requestUrl += '?ip=' + params.ip
-    }    
+    }
     return axios.get(requestUrl).catch(err => {
-      return this.json({status: 1002, message: '查询失败，请稍后再试', data: {}})
-    }).then(({data}) => {
+      return this.json({ status: 1002, message: '查询失败，请稍后再试', data: {} })
+    }).then(({ data }) => {
       const $ = cheerio.load(data)
-      return this.json({status: 200, message: '成功', data: {
-        ip: $('#result').find('code').eq(0).text(),
-        address: $('#result').find('code').eq(1).text(),
-        geoIp: $('#result').html().replace(/(.*geoip:)([^<]*)(<\/p>.*)/i, '$2').trim()
-      }})
+      return this.json({
+        status: 200, message: '成功', data: {
+          ip: $('#result').find('code').eq(0).text(),
+          address: $('#result').find('code').eq(1).text(),
+          geoIp: $('#result').html().replace(/(.*geoip:)([^<]*)(<\/p>.*)/i, '$2').trim()
+        }
+      })
     })
   }
 
-  getPinyinToken () {
+  async delegateAction() {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    let params = await this.post();
+    let _requestParams = {
+      baseURL: params.baseURL,
+      url: params.url,
+      method: params.method || 'get'
+    }
+    if (params.method && (params.method.toLowerCase() === 'post')) {
+      _requestParams.data = params.data
+    } else {
+      if (params.data) {
+        _requestParams.url = _requestParams.url + qs.stringify(params.data)
+      } else { }
+    }
+    return axios(_requestParams).catch(err => {
+      return this.json({ status: 1002, message: '转换失败，请稍后再试', data: {} })
+    }).then(({ data }) => {
+      return this.json({
+        status: 200, message: '成功', data: data
+      })
+    })
+  }
+
+  getPinyinToken() {
     return new Promise(resolve => {
       let requestUrl = 'https://www.qqxiuzi.cn/zh/pinyin/'
       axios.get(requestUrl).catch(err => {
         resolve('')
-      }).then(({data}) => {
+      }).then(({ data }) => {
         const $ = cheerio.load(data)
         let _token = $('head').html().replace(/\r/ig, '').replace(/\n|\s/ig, '')
         _token = _token.replace(/(.*&token=)([a-z0-9_]*)('.*)/i, '$2').trim()
         resolve(_token)
       })
-    })    
+    })
   }
 
-  async pinyinAction () {
+  async pinyinAction() {
     // if (!this.isPost()) {
     //   return this.json({status: 405, message: '请求方法不正确', data: {}});
     // }
@@ -128,13 +156,13 @@ module.exports = class extends enkel.controller.base {
     // }
     let _token = await this.getPinyinToken()
     if (!_token) {
-      return this.json({status: 1002, message: '转换失败，请稍后再试', data: {}});
+      return this.json({ status: 1002, message: '转换失败，请稍后再试', data: {} });
     }
     // let params = await this.post();
     let params = this.get();
     let requestUrl = 'https://www.qqxiuzi.cn/zh/pinyin/show.php'
     if (!params.t) {
-      return this.json({status: 200, message: '成功', data: {result: ''}})
+      return this.json({ status: 200, message: '成功', data: { result: '' } })
     }
     let requestParams = {
       t: params.t,
@@ -158,12 +186,14 @@ module.exports = class extends enkel.controller.base {
         'Content-type': 'application/x-www-form-urlencoded'
       }
     }).catch(err => {
-      return this.json({status: 1002, message: '转换失败，请稍后再试', data: {}})
-    }).then(({data}) => {
+      return this.json({ status: 1002, message: '转换失败，请稍后再试', data: {} })
+    }).then(({ data }) => {
       console.log('>>>>,,,,,,,,,', data)
-      return this.json({status: 200, message: '成功', data: {
-        result: data
-      }})
+      return this.json({
+        status: 200, message: '成功', data: {
+          result: data
+        }
+      })
     })
   }
 }
