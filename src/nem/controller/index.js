@@ -44,7 +44,7 @@ module.exports = class extends enkel.controller.base {
   init(http) {
     super.init(http);
 
-    this.response.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:8080');
+    this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', '*');
     this.response.setHeader('Access-Control-Allow-Methods', '*');
     this.response.setHeader("Access-Control-Allow-Credentials", "true");
