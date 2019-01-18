@@ -34,27 +34,29 @@
  * Created by liangshan on 2017/11/13.
  */
 module.exports = class extends enkel.controller.base {
-  init (http) {
-    super.init(http);
+  init(http) {
+    super.init(http)
 
     this.UserModel = this.models('Home/user')
   }
 
-  indexAction () {
-    return this.UserModel.findOne({where: {'username': 'ls'}}).then((user) => {
-      return this.json({status: 200, message: '成功2', data: user})
+  indexAction() {
+    return this.UserModel.findOne({ where: { username: 'ls' } }).then(user => {
+      return this.json({ status: 200, message: '成功2', data: user })
     })
   }
 
-  async addUserAction () {
+  async addUserAction() {
     await this.UserModel.create({
       username: 'ls',
       password: '123123',
       phonenum: '18000000000',
       nickname: '王二小'
-    });
-    let count = await this.UserModel.count({where: {username: 'ls'}});
-    return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
+    })
+    let count = await this.UserModel.count({ where: { username: 'ls' } })
+    return this.json({
+      status: 200,
+      message: count > 0 ? '添加成功' : '添加失败'
+    })
   }
-
 }
