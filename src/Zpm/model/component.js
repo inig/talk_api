@@ -31,6 +31,10 @@ module.exports = {
     cid: {
       type: Sequelize.INTEGER
     },
+    uuid: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV4
+    },
     desc: {
       type: Sequelize.TEXT,
       defaultValue: '该组件暂无描述'

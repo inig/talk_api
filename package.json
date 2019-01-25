@@ -31,8 +31,10 @@
     "adm-zip": "^0.4.7",
     "baidu-aip-sdk": "^2.3.1",
     "big-integer": "^1.6.36",
+    "body-parser": "^1.18.3",
     "cheerio": "^1.0.0-rc.2",
     "jsonwebtoken": "^8.1.0",
-    "jssha": "1.5.0"
+    "jssha": "1.5.0",
+    "multiparty": "^4.2.1"
   }
 }
