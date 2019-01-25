@@ -28,7 +28,7 @@
   "author": "cheenoalive@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "adm-zip": "^0.4.7",
+    "adm-zip": ">=0.4.11",
     "baidu-aip-sdk": "^2.3.1",
     "big-integer": "^1.6.36",
     "body-parser": "^1.18.3",
