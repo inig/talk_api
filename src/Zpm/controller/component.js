@@ -587,7 +587,7 @@ module.exports = class extends enkel.controller.base {
             updateCondition.status = Number(params.status)
           }
           updateCondition.remarks = params.remarks
-          let updatePlugin = await this.PluginModel.update(updateCondition, {
+          let updatePlugin = await this.ComponentModel.update(updateCondition, {
             where: {
               name: params.name
             }
@@ -628,7 +628,7 @@ module.exports = class extends enkel.controller.base {
         });
         if (currentUser && (Number(currentUser.role) === 1 || Number(currentUser.role) === 2)) {
           // 超级管理员或管理员
-          let deleteUser = await this.PluginModel.destroy({
+          let deleteUser = await this.ComponentModel.destroy({
             where: {
               name: params.name
             }
@@ -643,6 +643,103 @@ module.exports = class extends enkel.controller.base {
         }
       } catch (err) {
         return this.json({ status: 403, message: '权限不够', data: {} });
+      }
+    }
+  }
+
+  /**
+     * 获取插件列表, 用于root、admin插件管理
+     * @returns {Promise<*|{line, column}|number>}
+     */
+  async listAllAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
+    }
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
+    } else {
+      try {
+        let currentUser = await this.UserModel.findOne({
+          where: { phonenum: params.phonenum },
+          attributes: { exclude: ['id', 'password'] }
+        });
+        let _searchCondition = JSON.parse(JSON.stringify(params));
+        if (_searchCondition.token) {
+          delete _searchCondition.token
+        }
+        if (_searchCondition.phonenum) {
+          delete _searchCondition.phonenum
+        }
+        if (_searchCondition.pageIndex) {
+          delete _searchCondition.pageIndex
+        }
+        if (_searchCondition.pageSize) {
+          delete _searchCondition.pageSize
+        }
+
+        if (currentUser && (Number(currentUser.role) === 1 || Number(currentUser.role) === 2)) {
+          // 超级管理员或管理员
+          let pageIndex = Number(params.pageIndex) || 1;
+          let pageSize = Number(params.pageSize) || 30;
+
+          if (_searchCondition.author) {
+            _searchCondition.author = {
+              [this.Op.regexp]: `${_searchCondition.author}`
+            }
+          }
+          if (_searchCondition.name) {
+            _searchCondition.name = {
+              [this.Op.regexp]: `${_searchCondition.name}`
+            }
+          }
+          let pluginList = await this.ComponentModel.findAll({
+            where: _searchCondition,
+            limit: pageSize,
+            offset: (pageIndex - 1) * pageSize,
+            attributes: { exclude: ['id'] },
+            order: [
+              ['updatedAt', 'DESC']
+            ]
+          });
+          if (pluginList) {
+            if (_searchCondition.pageIndex) {
+              delete _searchCondition.pageIndex
+            }
+            if (_searchCondition.pageSize) {
+              delete _searchCondition.pageSize
+            }
+            let _countAll = await this.ComponentModel.count({
+              where: _searchCondition
+            });
+            return this.json({
+              status: 200, message: '查询成功', data: {
+                list: pluginList || [],
+                count: pluginList.length,
+                pageIndex: pageIndex,
+                pageSize: pageSize,
+                totalCounts: _countAll,
+                total: Math.ceil(_countAll / pageSize)
+              }
+            });
+          } else {
+            return this.json({
+              status: 200, message: '查询成功', data: {
+                list: [],
+                count: 0,
+                pageIndex: pageIndex,
+                pageSize: pageSize
+              }
+            });
+          }
+        } else {
+          return this.json({ status: 403, message: '查询失败', data: {} });
+        }
+      } catch (err) {
+        return this.json({ status: 403, message: err, data: {} });
       }
     }
   }
