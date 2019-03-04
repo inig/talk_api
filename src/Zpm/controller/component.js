@@ -630,7 +630,9 @@ module.exports = class extends enkel.controller.base {
           // 超级管理员或管理员
           let deleteUser = await this.ComponentModel.destroy({
             where: {
-              name: params.name
+              uuid: {
+                [this.Op.like]: params.uuid + '%'
+              }
             }
           });
           if (deleteUser) {
@@ -700,6 +702,14 @@ module.exports = class extends enkel.controller.base {
             where: _searchCondition,
             limit: pageSize,
             offset: (pageIndex - 1) * pageSize,
+            include: [
+              {
+                model: this.UserModel,
+                attributes: {
+                  exclude: ['id', 'password', 'token']
+                }
+              }
+            ],
             attributes: { exclude: ['id'] },
             order: [
               ['updatedAt', 'DESC']
