@@ -69,12 +69,5 @@ module.exports = {
     role: {
       type: Sequelize.INTEGER
     }
-  },
-  relations: {
-    plugin: {
-      type: 'hasMany',
-      foreignKey: 'author',
-      sourceKey: 'id'
-    }
   }
 };

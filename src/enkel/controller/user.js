@@ -43,6 +43,12 @@ module.exports = class extends enkel.controller.base {
     this.UserModel = this.models('enkel/user');
     this.RoleModel = this.models('enkel/role');
 
+    this.UserModel.belongsTo(this.RoleModel, {
+      // as: 'user',
+      foreignKey: 'role',
+      targetKey: 'value'
+    })
+
     this.Op = this.Sequelize.Op;
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
@@ -215,12 +221,24 @@ module.exports = class extends enkel.controller.base {
     let loginWith = '';
     let loginUser = await this.UserModel.findOne({
       where: { username: params.username, password: params.password },
-      attributes: { exclude: ['id', 'password'] }
+      attributes: { exclude: ['id', 'password', 'createAt', 'updateAt'] },
+      include: [{
+        model: this.RoleModel,
+        attributes: {
+          exclude: ['id', 'createAt', 'updateAt']
+        }
+      }]
     });
     if (!loginUser) {
       loginUser = await this.UserModel.findOne({
         where: { phonenum: params.username, password: params.password },
-        attributes: { exclude: ['id', 'password'] }
+        attributes: { exclude: ['id', 'password', 'createAt', 'updateAt'] },
+        include: [{
+          model: this.RoleModel,
+          attributes: {
+            exclude: ['id', 'createAt', 'updateAt']
+          }
+        }]
       });
       if (!loginUser) {
         return this.json({ status: 401, message: '账号或密码不正确', data: {} });
@@ -281,9 +299,9 @@ module.exports = class extends enkel.controller.base {
         password: params.password,
         phonenum: params.phonenum,
         nickname: '',
-        gender: 1,
+        gender: 2,
         plugins: '',
-        role: 3
+        role: 1
       });
       let count = await this.UserModel.count({ where: { phonenum: params.phonenum } });
       return this.json({ status: 200, message: count > 0 ? '注册成功' : '注册失败', data: {} });
@@ -330,21 +348,39 @@ module.exports = class extends enkel.controller.base {
       let searchCondition = {};
       searchCondition['phonenum'] = params.phonenum;
 
-      let updateUserInfoStatus = await this.UserModel.update({
-        username: params.username,
-        nickname: params.nickname,
-        email: params.email,
-        gender: params.gender,
-        birthday: params.birthday,
-        website: params.website
-      }, {
-          where: searchCondition
-        });
+      let needUpdateInfo = {}
+      if (params.username) {
+        needUpdateInfo.username = params.username
+      }
+      if (params.nickname) {
+        needUpdateInfo.nickname = params.nickname
+      }
+      if (params.email) {
+        needUpdateInfo.email = params.email
+      }
+      if (params.gender) {
+        needUpdateInfo.gender = params.gender
+      }
+      if (params.birthday) {
+        needUpdateInfo.birthday = params.birthday
+      }
+      if (params.website) {
+        needUpdateInfo.website = params.website
+      }
+      let updateUserInfoStatus = await this.UserModel.update(needUpdateInfo, {
+        where: searchCondition
+      });
 
       if (updateUserInfoStatus[0] > 0) {
         let userInfo = await this.UserModel.findOne({
           where: { phonenum: params.phonenum },
-          attributes: { exclude: ['id', 'password'] }
+          attributes: { exclude: ['id', 'password', 'createAt', 'updateAt'] },
+          include: [{
+            model: this.RoleModel,
+            attributes: {
+              exclude: ['id', 'createAt', 'updateAt']
+            }
+          }]
         });
         if (userInfo) {
           return this.json({ status: 200, message: '更新成功', data: userInfo || {} });
@@ -368,35 +404,45 @@ module.exports = class extends enkel.controller.base {
     if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
       return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
     } else {
+      let userInfo = await this.UserModel.findOne({
+        where: {
+          phonenum: params.phonenum,
+          password: params.old
+        },
+        attributes: { exclude: ['id', 'password'] }
+      });
+      if (userInfo) {
+        if (!/\S{6,}/.test(params.newPass)) {
+          return this.json({ status: 401, message: '请输入6位密码', data: {} });
+        }
+        if (params.newPass !== params.rePass) {
+          return this.json({ status: 401, message: '两次密码不一致', data: {} });
+        }
 
-      if (!/\S{6,}/.test(params.newPass)) {
-        return this.json({ status: 401, message: '密码格式不正确', data: {} });
-      }
-      if (params.newPass !== params.rePass) {
-        return this.json({ status: 401, message: '两次密码不一致', data: {} });
-      }
+        let searchCondition = {};
+        searchCondition['phonenum'] = params.phonenum;
 
-      let searchCondition = {};
-      searchCondition['phonenum'] = params.phonenum;
+        let ModifyStatus = await this.UserModel.update({
+          password: params.newPass,
+        }, {
+            where: searchCondition
+          });
 
-      let ModifyStatus = await this.UserModel.update({
-        password: params.newPass,
-      }, {
-          where: searchCondition
-        });
-
-      if (ModifyStatus[0] > 0) {
-        let userInfo = await this.UserModel.findOne({
-          where: { phonenum: params.phonenum, password: params.newPass },
-          attributes: { exclude: ['id', 'password'] }
-        });
-        if (userInfo) {
-          return this.json({ status: 200, message: '密码更新成功', data: { needLogin: true } });
+        if (ModifyStatus[0] > 0) {
+          let userInfo = await this.UserModel.findOne({
+            where: { phonenum: params.phonenum, password: params.newPass },
+            attributes: { exclude: ['id', 'password'] }
+          });
+          if (userInfo) {
+            return this.json({ status: 200, message: '密码更新成功', data: { needLogin: true } });
+          } else {
+            return this.json({ status: 401, message: '密码更新失败', data: {} });
+          }
         } else {
           return this.json({ status: 401, message: '密码更新失败', data: {} });
         }
       } else {
-        return this.json({ status: 401, message: '密码更新失败', data: {} });
+        return this.json({ status: 401, message: '旧密码不正确', data: {} });
       }
     }
   }
@@ -413,7 +459,7 @@ module.exports = class extends enkel.controller.base {
       if (!_isLegalLogin) {
         return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
       } else {
-        let avatarPath = '/mnt/srv/web_static/plugins_admin/img';
+        let avatarPath = '/mnt/srv/web_static/extensions/avatar';
         try {
           let uploadedFile = await this.upload({
             accept: params.accept,
@@ -425,7 +471,7 @@ module.exports = class extends enkel.controller.base {
 
           let searchCondition = {};
           searchCondition['phonenum'] = params.phonenum;
-          let fileUrl = `https://static.dei2.com/plugins_admin/img/${uploadedFile.filename}`;
+          let fileUrl = `https://static.dei2.com/extensions/avatar/${uploadedFile.filename}`;
           let avatarStatus = await this.UserModel.update({
             headIcon: fileUrl
           }, {

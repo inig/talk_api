@@ -36,17 +36,22 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
 const qs = require('querystring');
+const jwt = require('jsonwebtoken');
+const secret = 'com.dei2';
+const tokenExpiresIn = '7d';
 
 module.exports = class extends enkel.controller.base {
-  init(http) {
+  init (http) {
     super.init(http);
+
+    this.UserModel = this.models('enkel/user');
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', '*');
     this.response.setHeader('Access-Control-Allow-Methods', '*');
   }
 
-  getCookie(name) {
+  getCookie (name) {
     if (!this.request.headers || !this.request.headers.cookies) {
       return (!name ? {} : '')
     }
@@ -72,7 +77,39 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  checkAuth() {
+  async checkLogin (args) {
+    if (!args.token || args.token === '') {
+      return false;
+    }
+    let _status = jwt.verify(args.token, secret, (err, decoded) => {
+      return err || {};
+    });
+    if (_status.name === 'TokenExpiredError') {
+      return false;
+    } else {
+      let loginUser = await this.UserModel.findOne({ where: { username: args.username } });
+      if (!loginUser) {
+        loginUser = await this.UserModel.findOne({ where: { phonenum: args.username } });
+        if (!loginUser) {
+          return false;
+        } else { }
+      } else { }
+      if (loginUser.token === '') {
+        return false;
+      } else {
+        let _storeTokenStatus = jwt.verify(args.token, secret, (err, decoded) => {
+          return err || {};
+        });
+        if (_storeTokenStatus.name === 'TokenExpiredError') {
+          return false;
+        } else {
+        }
+        return true;
+      }
+    }
+  }
+
+  checkAuth () {
     let enkelCookie = this.getCookie('enkel')
     if (!enkelCookie || enkelCookie.trim() !== '9d935f95a1630e1282ae9861f16fcf0b') {
       return false
@@ -81,7 +118,7 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async indexAction() {
+  async indexAction () {
     if (!this.isPost()) {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
@@ -107,7 +144,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async delegateAction() {
+  async delegateAction () {
     if (!this.isPost()) {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
@@ -133,7 +170,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  getPinyinToken() {
+  getPinyinToken () {
     return new Promise(resolve => {
       let requestUrl = 'https://www.qqxiuzi.cn/zh/pinyin/'
       axios.get(requestUrl).catch(err => {
@@ -147,7 +184,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async pinyinAction() {
+  async pinyinAction () {
     // if (!this.isPost()) {
     //   return this.json({status: 405, message: '请求方法不正确', data: {}});
     // }
@@ -195,5 +232,154 @@ module.exports = class extends enkel.controller.base {
         }
       })
     })
+  }
+
+  getImagesAction () {
+    return this.json({
+      status: 200,
+      message: '成功',
+      list: [
+        {
+          label: '风景',
+          sublist: [
+            {
+              label: '风景1',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery01.jpg'
+            },
+            {
+              label: '风景2',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery02.jpeg'
+            },
+            {
+              label: '风景3',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery03.jpeg'
+            },
+            {
+              label: '风景4',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery04.jpeg'
+            },
+            {
+              label: '风景5',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery05.jpeg'
+            },
+            {
+              label: '风景6',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery06.jpeg'
+            },
+            {
+              label: '风景7',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery07.jpeg'
+            },
+            {
+              label: '风景8',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery08.jpeg'
+            },
+            {
+              label: '风景9',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery09.jpeg'
+            },
+            {
+              label: '风景10',
+              img: 'https://static.dei2.com/extensions/img/scenery/scenery10.jpeg'
+            }
+          ]
+        },
+        {
+          label: '卡通',
+          sublist: [
+            {
+              label: '人物1',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon01.jpg'
+            },
+            {
+              label: '人物2',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon02.jpeg'
+            },
+            {
+              label: '人物3',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon03.jpeg'
+            },
+            {
+              label: '人物4',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon04.jpeg'
+            },
+            {
+              label: '人物5',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon05.jpg'
+            },
+            {
+              label: '人物7',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon07.jpg'
+            },
+            {
+              label: '人物9',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon09.jpg'
+            },
+            {
+              label: '人物10',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon10.jpg'
+            },
+            {
+              label: '人物13',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon13.jpg'
+            },
+            {
+              label: '人物15',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon15.jpg'
+            },
+            {
+              label: '人物16',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon16.jpg'
+            },
+            {
+              label: '人物17',
+              img: 'https://static.dei2.com/extensions/img/cartoon/cartoon17.jpg'
+            }
+          ]
+        }
+      ]
+    })
+  }
+
+  async getGankDataAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    if (!this.checkAuth()) {
+      return this.json({ status: 1001, message: '请求不合法', data: {} })
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
+      return this.json({ status: 401, message: '保存失败', data: { needLogin: true } });
+    } else {
+      let _isLegalLogin = this.checkLogin({
+        username: params.phonenum,
+        token: params.token
+      });
+      if (!_isLegalLogin) {
+        return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
+      } else {
+        let baseUrl = 'http://gank.io/api/data'
+        let category = params.category || 'all'
+        let pageSize = params.pageSize || 30
+        let pageIndex = params.pageIndex || 1
+        let requestUrl = baseUrl + '/' + encodeURIComponent(category) + '/' + pageSize + '/' + pageIndex
+        return axios.get(requestUrl).catch(err => {
+          return this.json({ status: 1002, message: '查询失败，请稍后再试', data: {} })
+        }).then(({ data }) => {
+          let _data = data.results ? data.results : [] // .filter(item => item.src = item.url)
+          return this.json({
+            status: 200,
+            message: '成功',
+            data: {
+              list: _data || [],
+              count: _data.length,
+              pageIndex: pageIndex,
+              pageSize: pageSize
+            }
+          })
+        })
+      }
+    }
   }
 }
