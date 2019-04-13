@@ -382,4 +382,58 @@ module.exports = class extends enkel.controller.base {
       }
     }
   }
+
+  /**
+   * 生成证件照
+   */
+  async getIdImageAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    if (!this.checkAuth()) {
+      return this.json({ status: 1001, message: '请求不合法', data: {} })
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
+      return this.json({ status: 401, message: '保存失败', data: { needLogin: true } });
+    } else {
+      let _isLegalLogin = this.checkLogin({
+        username: params.phonenum,
+        token: params.token
+      });
+      let _requestParams = JSON.parse(JSON.stringify(params))
+      if (_requestParams.hasOwnProperty('phonenum')) {
+        _requestParams.phonenum = null
+        delete _requestParams.phonenum
+      }
+      if (_requestParams.hasOwnProperty('token')) {
+        _requestParams.token = null
+        delete _requestParams.token
+      }
+      if (_requestParams.hasOwnProperty('image_base64')) {
+        _requestParams.image_base64 = _requestParams.image_base64.replace('data:image/octet-stream;base64,', '')
+      }
+      if (!_isLegalLogin) {
+        return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
+      } else {
+        return axios({
+          method: 'post',
+          url: 'https://api-cn.faceplusplus.com/humanbodypp/v2/segment',
+          timeout: 3 * 60 * 1000,
+          data: qs.stringify(Object.assign(_requestParams, {
+            api_key: 'BDwv4OaugITE8HVAbe12HqOy46VOceMt',
+            api_secret: 'JBkSDM5LKyl7jTsuZBC2aLXBffdDdZrJ'
+          }))
+        }).catch(err => {
+          return this.json({ status: 1002, message: '查询失败，请稍后再试', data: {} })
+        }).then(({ data }) => {
+          return this.json({
+            status: 200,
+            message: '成功',
+            data: data
+          })
+        })
+      }
+    }
+  }
 }
