@@ -56,124 +56,162 @@ module.exports = class extends enkel.controller.base {
     this.response.setHeader('Access-Control-Allow-Methods', '*');
   }
 
-  indexAction () {
-    return this.UserModel.findOne({ where: { 'username': 'ls' } }).then((user) => {
-      return this.json({ status: 200, message: '成功2', data: user })
-    })
+  getCookie (name) {
+    if (!this.request.headers || !this.request.headers.cookies) {
+      return (!name ? {} : '')
+    }
+    let _cookies = this.request.headers.cookies.replace(/; /g, ';')
+    let outObj = {}
+    if (_cookies.trim() === '') {
+      if (!name) {
+        return {}
+      } else {
+        return ''
+      }
+    }
+    let _cookiesArr = _cookies.split(';')
+    for (let i = 0; i < _cookiesArr.length; i++) {
+      if (!outObj.hasOwnProperty(_cookiesArr[i].split('=')[0])) {
+        outObj[_cookiesArr[i].split('=')[0]] = _cookiesArr[i].split('=')[1]
+      }
+    }
+    if (!name) {
+      return outObj
+    } else {
+      return outObj[name] || ''
+    }
   }
 
-  async addUserAction () {
-    await this.UserModel.create({
-      username: 'ls',
-      password: '123123',
-      phonenum: '18000000000',
-      nickname: '前端开荒牛',
-      gender: 1,
-      role: 19
-    });
-    let count = await this.UserModel.count({ where: { username: 'ls' } });
-    return this.json({ status: 200, message: count > 0 ? '添加成功' : '添加失败' });
+  checkAuth () {
+    let enkelCookie = this.getCookie('enkel')
+    if (!enkelCookie || enkelCookie.trim() !== '9d935f95a1630e1282ae9861f16fcf0b') {
+      return false
+    } else {
+      return true
+    }
   }
 
-  async addRoleAction () {
-    await this.RoleModel.create({
-      name: '太师',
-      desc: '正一品',
-      value: '19'
-    });
-    await this.RoleModel.create({
-      name: '尚书',
-      desc: '从一品',
-      value: '18'
-    });
-    await this.RoleModel.create({
-      name: '总督',
-      desc: '正二品',
-      value: '17'
-    });
-    await this.RoleModel.create({
-      name: '巡抚',
-      desc: '从二品',
-      value: '16'
-    });
-    await this.RoleModel.create({
-      name: '按察使',
-      desc: '正三品',
-      value: '15'
-    });
-    await this.RoleModel.create({
-      name: '盐运使',
-      desc: '从三品',
-      value: '14'
-    });
-    await this.RoleModel.create({
-      name: '道员',
-      desc: '正四品',
-      value: '13'
-    });
-    await this.RoleModel.create({
-      name: '知府',
-      desc: '从四品',
-      value: '12'
-    });
-    await this.RoleModel.create({
-      name: '同知',
-      desc: '正五品',
-      value: '11'
-    });
-    await this.RoleModel.create({
-      name: '知州',
-      desc: '从五品',
-      value: '10'
-    });
-    await this.RoleModel.create({
-      name: '通判',
-      desc: '正六品',
-      value: '9'
-    });
-    await this.RoleModel.create({
-      name: '州同',
-      desc: '从六品',
-      value: '8'
-    });
-    await this.RoleModel.create({
-      name: '知县',
-      desc: '正七品',
-      value: '7'
-    });
-    await this.RoleModel.create({
-      name: '州判',
-      desc: '从七品',
-      value: '6'
-    });
-    await this.RoleModel.create({
-      name: '县丞',
-      desc: '正八品',
-      value: '5'
-    });
-    await this.RoleModel.create({
-      name: '训导',
-      desc: '从八品',
-      value: '4'
-    });
-    await this.RoleModel.create({
-      name: '县主簿',
-      desc: '正九品',
-      value: '3'
-    });
-    await this.RoleModel.create({
-      name: '巡检',
-      desc: '从九品',
-      value: '2'
-    });
-    await this.RoleModel.create({
-      name: '驿丞',
-      desc: '不入流',
-      value: '1'
-    });
-    let count = await this.RoleModel.count();
-    return this.json({ status: 200, message: count > 0 ? `共添加了${count}个会员等级` : '添加失败' });
-  }
+  // indexAction () {
+  //   if (!this.checkAuth()) {
+  //     return this.json({ status: 1001, message: '请求不合法', data: {} })
+  //   }
+  //   return this.UserModel.findOne({ where: { 'username': 'ls' } }).then((user) => {
+  //     return this.json({ status: 200, message: '成功2', data: user })
+  //   })
+  // }
+
+  // async addUserAction () {
+  //   await this.UserModel.create({
+  //     username: 'ls',
+  //     password: '123123',
+  //     phonenum: '18000000000',
+  //     nickname: '前端开荒牛',
+  //     gender: 1,
+  //     role: 19
+  //   });
+  //   let count = await this.UserModel.count({ where: { username: 'ls' } });
+  //   return this.json({ status: 200, message: count > 0 ? '添加成功' : '添加失败' });
+  // }
+
+  // async addRoleAction () {
+  //   await this.RoleModel.create({
+  //     name: '太师',
+  //     desc: '正一品',
+  //     value: '19'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '尚书',
+  //     desc: '从一品',
+  //     value: '18'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '总督',
+  //     desc: '正二品',
+  //     value: '17'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '巡抚',
+  //     desc: '从二品',
+  //     value: '16'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '按察使',
+  //     desc: '正三品',
+  //     value: '15'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '盐运使',
+  //     desc: '从三品',
+  //     value: '14'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '道员',
+  //     desc: '正四品',
+  //     value: '13'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '知府',
+  //     desc: '从四品',
+  //     value: '12'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '同知',
+  //     desc: '正五品',
+  //     value: '11'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '知州',
+  //     desc: '从五品',
+  //     value: '10'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '通判',
+  //     desc: '正六品',
+  //     value: '9'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '州同',
+  //     desc: '从六品',
+  //     value: '8'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '知县',
+  //     desc: '正七品',
+  //     value: '7'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '州判',
+  //     desc: '从七品',
+  //     value: '6'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '县丞',
+  //     desc: '正八品',
+  //     value: '5'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '训导',
+  //     desc: '从八品',
+  //     value: '4'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '县主簿',
+  //     desc: '正九品',
+  //     value: '3'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '巡检',
+  //     desc: '从九品',
+  //     value: '2'
+  //   });
+  //   await this.RoleModel.create({
+  //     name: '驿丞',
+  //     desc: '未入流',
+  //     value: '1'
+  //   });
+  //   let count = await this.RoleModel.count();
+  //   return this.json({ status: 200, message: count > 0 ? `共添加了${count}个会员等级` : '添加失败' });
+  // }
 
   async checkLogin (args) {
     if (!args.token || args.token === '') {
@@ -753,6 +791,51 @@ module.exports = class extends enkel.controller.base {
         }
       } catch (err) {
         return this.json({ status: 403, message: '权限不够', data: {} });
+      }
+    }
+  }
+
+  async updateUserSettingsAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    if (!this.checkAuth()) {
+      return this.json({ status: 1001, message: '请求不合法', data: {} })
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
+    }
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
+    } else {
+      try {
+        let currentUser = await this.UserModel.findOne({
+          where: { phonenum: params.phonenum },
+          attributes: { exclude: ['id', 'password'] }
+        });
+        if (currentUser) {
+          let updatedData = await this.UserModel.update({
+            settings: params.settings
+          }, {
+              where: {
+                phonenum: params.phonenum
+              }
+            });
+          if (updatedData[0] > 0) {
+            // 更新用户登录token成功
+            return this.json({
+              status: 200, message: '更新成功', data: {
+                phonenum: params.phonenum,
+                settings: params.settings
+              }
+            });
+          }
+        } else {
+          return this.json({ status: 403, message: '用户不存在', data: {} });
+        }
+      } catch (err) {
+        return this.json({ status: 403, message: '操作失败', data: {} });
       }
     }
   }

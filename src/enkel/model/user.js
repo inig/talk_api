@@ -68,6 +68,28 @@ module.exports = {
     },
     role: {
       type: Sequelize.INTEGER
+    },
+    settings: {
+      type: Sequelize.TEXT,
+      defaultValue: '{}',
+      get () {
+        let out = {}
+        try {
+          out = JSON.parse(this.getDataValue('settings'))
+        } catch (err) {
+          out = {}
+        }
+        return out
+      },
+      set (val) {
+        let insert = '{}'
+        if (typeof val !== 'string') {
+          insert = JSON.stringify(val)
+        } else {
+          insert = val
+        }
+        this.setDataValue('settings', insert)
+      }
     }
   }
 };
