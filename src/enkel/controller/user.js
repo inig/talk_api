@@ -714,49 +714,49 @@ module.exports = class extends enkel.controller.base {
    * 修改用户的状态、权限
    * @returns {Promise<*|{line, column}|number>}
    */
-  async updateUserSettingsAction () {
-    if (!this.isPost()) {
-      return this.json({ status: 405, message: '请求方法不正确', data: {} });
-    }
-    let params = await this.post();
-    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
-    }
-    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
-      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
-    } else {
-      try {
-        let currentUser = await this.UserModel.findOne({
-          where: { phonenum: params.phonenum },
-          attributes: { exclude: ['id', 'password'] }
-        });
-        if (currentUser && Number(currentUser.role) === 1) {
-          // 超级管理员
-          let updateCondition = {};
-          if (params.status) {
-            updateCondition.status = Number(params.status)
-          }
-          if (params.role) {
-            updateCondition.role = Number(params.role)
-          }
-          let updateUser = await this.UserModel.update(updateCondition, {
-            where: {
-              phonenum: params.targetPhonenum
-            }
-          });
-          if (updateUser) {
-            return this.json({ status: 200, message: '修改成功', data: { phonenum: params.targetPhonenum } });
-          } else {
-            return this.json({ status: 1001, message: '修改失败', data: {} });
-          }
-        } else {
-          return this.json({ status: 403, message: '权限不够', data: {} });
-        }
-      } catch (err) {
-        return this.json({ status: 403, message: '权限不够', data: {} });
-      }
-    }
-  }
+  // async updateUserSettingsAction () {
+  //   if (!this.isPost()) {
+  //     return this.json({ status: 405, message: '请求方法不正确', data: {} });
+  //   }
+  //   let params = await this.post();
+  //   if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+  //     return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
+  //   }
+  //   if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+  //     return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
+  //   } else {
+  //     try {
+  //       let currentUser = await this.UserModel.findOne({
+  //         where: { phonenum: params.phonenum },
+  //         attributes: { exclude: ['id', 'password'] }
+  //       });
+  //       if (currentUser && Number(currentUser.role) === 1) {
+  //         // 超级管理员
+  //         let updateCondition = {};
+  //         if (params.status) {
+  //           updateCondition.status = Number(params.status)
+  //         }
+  //         if (params.role) {
+  //           updateCondition.role = Number(params.role)
+  //         }
+  //         let updateUser = await this.UserModel.update(updateCondition, {
+  //           where: {
+  //             phonenum: params.targetPhonenum
+  //           }
+  //         });
+  //         if (updateUser) {
+  //           return this.json({ status: 200, message: '修改成功', data: { phonenum: params.targetPhonenum } });
+  //         } else {
+  //           return this.json({ status: 1001, message: '修改失败', data: {} });
+  //         }
+  //       } else {
+  //         return this.json({ status: 403, message: '权限不够', data: {} });
+  //       }
+  //     } catch (err) {
+  //       return this.json({ status: 403, message: '权限不够', data: {} });
+  //     }
+  //   }
+  // }
 
   async deleteUserAction () {
     if (!this.isPost()) {
