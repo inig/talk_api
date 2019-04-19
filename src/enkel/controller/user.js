@@ -827,7 +827,7 @@ module.exports = class extends enkel.controller.base {
             return this.json({
               status: 200, message: '更新成功', data: {
                 phonenum: params.phonenum,
-                settings: params.settings
+                settings: (typeof params.settings === 'string' ? JSON.parse(params.settings) : params.settings)
               }
             });
           }
