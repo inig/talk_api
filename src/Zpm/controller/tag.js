@@ -50,7 +50,7 @@ module.exports = class extends enkel.controller.base {
   }
 
   indexAction () {
-    return this.json({status: 200, message: '成功2', data: {}});
+    return this.json({ status: 200, message: '成功2', data: {} });
   }
 
   async checkLogin (args) {
@@ -63,13 +63,13 @@ module.exports = class extends enkel.controller.base {
     if (_status.name === 'TokenExpiredError') {
       return false;
     } else {
-      let loginUser = await this.UserModel.findOne({where: {username: args.username}});
+      let loginUser = await this.UserModel.findOne({ where: { username: args.username } });
       if (!loginUser) {
-        loginUser = await this.UserModel.findOne({where: {phonenum: args.username}});
+        loginUser = await this.UserModel.findOne({ where: { phonenum: args.username } });
         if (!loginUser) {
           return false;
-        } else {}
-      } else {}
+        } else { }
+      } else { }
       if (loginUser.token === '') {
         return false;
       } else {
@@ -91,11 +91,11 @@ module.exports = class extends enkel.controller.base {
    */
   async getAllAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     try {
       let tagList = await this.TagModel.findAll({
-        attributes: {exclude: ['id', 'createdAt', 'updatedAt']},
+        attributes: { exclude: ['id', 'createdAt', 'updatedAt'] },
         order: [
           ['value', 'ASC']
         ]
@@ -118,7 +118,7 @@ module.exports = class extends enkel.controller.base {
         })
       }
     } catch (error) {
-      return this.json({status: 403, message: error.message, data: {}});
+      return this.json({ status: 403, message: error.message, data: {} });
     }
   }
 }

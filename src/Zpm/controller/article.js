@@ -70,10 +70,10 @@ module.exports = class extends enkel.controller.base {
       targetKey: 'phonenum'
     })
 
-      this.ArticleModel.hasMany(this.CommentModel, {
-        foreignKey: 'aid',
-          sourceKey: 'uuid'
-      })
+    this.ArticleModel.hasMany(this.CommentModel, {
+      foreignKey: 'aid',
+      sourceKey: 'uuid'
+    })
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', 'content-type');
@@ -100,17 +100,17 @@ module.exports = class extends enkel.controller.base {
   }
 
   indexAction () {
-    return this.json({status: 200, message: '成功'})
+    return this.json({ status: 200, message: '成功' })
   }
 
-  async addArticleAction () {
-    await this.ArticleModel.create({
-      title: '郭树清领衔银保监会9人领导班子：7名副主席排序有讲究',
-      author: '18000000000'
-    });
-    let count = await this.ArticleModel.count();
-    return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
-  }
+  // async addArticleAction () {
+  //   await this.ArticleModel.create({
+  //     title: '郭树清领衔银保监会9人领导班子：7名副主席排序有讲究',
+  //     author: '18000000000'
+  //   });
+  //   let count = await this.ArticleModel.count();
+  //   return this.json({status: 200, message: count > 0 ? '添加成功' : '添加失败'});
+  // }
 
   async addTagAction () {
     let params = this.get()
@@ -145,9 +145,9 @@ module.exports = class extends enkel.controller.base {
     if (_status.name === 'TokenExpiredError') {
       return false;
     } else {
-      let loginUser = await this.UserModel.findOne({where: {username: args.username}});
+      let loginUser = await this.UserModel.findOne({ where: { username: args.username } });
       if (!loginUser) {
-        loginUser = await this.UserModel.findOne({where: {phonenum: args.username}});
+        loginUser = await this.UserModel.findOne({ where: { phonenum: args.username } });
         if (!loginUser) {
           return false;
         } else {
@@ -171,14 +171,14 @@ module.exports = class extends enkel.controller.base {
 
   async listAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
     }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
     } else {
       try {
         let _searchCondition = JSON.parse(JSON.stringify(params));
@@ -206,7 +206,7 @@ module.exports = class extends enkel.controller.base {
           where: _searchCondition,
           limit: pageSize,
           offset: (pageIndex - 1) * pageSize + offsetCount,
-          attributes: {exclude: ['id', 'content']},
+          attributes: { exclude: ['id', 'content'] },
           include: [{
             model: this.UserModel,
             // as: 'user2',
@@ -243,7 +243,7 @@ module.exports = class extends enkel.controller.base {
           });
         }
       } catch (error) {
-        return this.json({status: 403, message: error.message, data: {}});
+        return this.json({ status: 403, message: error.message, data: {} });
       }
     }
   }
@@ -254,7 +254,7 @@ module.exports = class extends enkel.controller.base {
    */
   async getAllAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     let _searchConditions = JSON.parse(JSON.stringify(params));
@@ -315,26 +315,26 @@ module.exports = class extends enkel.controller.base {
         });
       }
     } catch (error) {
-      return this.json({status: 403, message: error.message, data: {}});
+      return this.json({ status: 403, message: error.message, data: {} });
     }
   }
 
   async saveAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     if (!params.uuid || params.uuid === '') {
-      return this.json({status: 1001, message: '缺少文章id', data: {}});
+      return this.json({ status: 1001, message: '缺少文章id', data: {} });
     }
     // if ((!params.content || params.content === '') && (!params.contentUrl || params.contentUrl === '')) {
     //     return this.json({status: 1001, message: '文章内容不能为空', data: {uuid: params.uuid}});
     // }
     if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
     }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
     } else {
       let articleData = await this.ArticleModel.find({
         where: {
@@ -342,13 +342,13 @@ module.exports = class extends enkel.controller.base {
             [this.Op.like]: params.uuid + '%'
           }
         },
-        attributes: {exclude: ['id', 'content']}
+        attributes: { exclude: ['id', 'content'] }
       })
       if (!articleData) {
-        return this.json({status: 1001, message: '文章不存在', data: {uuid: params.uuid}})
+        return this.json({ status: 1001, message: '文章不存在', data: { uuid: params.uuid } })
       } else {
         if (String(params.phonenum) !== String(articleData.author)) {
-          return this.json({status: 1001, message: '无修改权限', data: {uuid: params.uuid}});
+          return this.json({ status: 1001, message: '无修改权限', data: { uuid: params.uuid } });
         }
       }
       try {
@@ -378,12 +378,12 @@ module.exports = class extends enkel.controller.base {
           }
         });
         if (updateData[0] > 0) {
-          return this.json({status: 200, message: '成功', data: {uuid: params.uuid}});
+          return this.json({ status: 200, message: '成功', data: { uuid: params.uuid } });
         } else {
-          return this.json({status: 1001, message: '失败', data: {uuid: params.uuid}});
+          return this.json({ status: 1001, message: '失败', data: { uuid: params.uuid } });
         }
       } catch (error) {
-        return this.json({status: 403, message: error.message, data: {}});
+        return this.json({ status: 403, message: error.message, data: {} });
       }
     }
   }
@@ -391,11 +391,11 @@ module.exports = class extends enkel.controller.base {
   async contentAction () {
     const that = this
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     if (!params.uuid || params.uuid === '') {
-      return this.json({status: 1001, message: '缺少文章id', data: {}});
+      return this.json({ status: 1001, message: '缺少文章id', data: {} });
     }
 
     // let _totalViews = REDIS_KEYS.TOTAL_VIEW.replace('{{ARTICLE_ID}}', params.uuid)
@@ -433,34 +433,34 @@ module.exports = class extends enkel.controller.base {
           //     ]
           //   }
         ],
-        attributes: {exclude: ['id']}
+        attributes: { exclude: ['id'] }
       });
       if (articleDetail) {
         // let _totalViewsCount = await this.getAsync(_totalViews)
         // let _todayViewsCount = await this.getAsync(_todayViews) || 0
-        return this.json({status: 200, message: '成功', data: Object.assign({}, articleDetail.dataValues)});
+        return this.json({ status: 200, message: '成功', data: Object.assign({}, articleDetail.dataValues) });
         //   , {
         //   totalViews: _totalViewsCount,
         //   todayViews: _todayViewsCount
         // })});
       } else {
-        return this.json({status: 1001, message: '查找失败', data: {uuid: params.uuid}})
+        return this.json({ status: 1001, message: '查找失败', data: { uuid: params.uuid } })
       }
     } catch (err) {
-      return this.json({status: 1005, message: err.message})
+      return this.json({ status: 1005, message: err.message })
     }
   }
 
   async createAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
     }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
     } else {
       try {
         let _searchCondition = JSON.parse(JSON.stringify(params));
@@ -482,7 +482,7 @@ module.exports = class extends enkel.controller.base {
           where: {
             phonenum: params.phonenum
           },
-          attributes: {exclude: ['id', 'password']}
+          attributes: { exclude: ['id', 'password'] }
         })
         if (createdData) {
           let _createdData = JSON.parse(JSON.stringify(createdData))
@@ -490,12 +490,12 @@ module.exports = class extends enkel.controller.base {
             delete _createdData.id
           }
           _createdData['zpm_user'] = userData
-          return this.json({status: 200, message: '成功', data: _createdData});
+          return this.json({ status: 200, message: '成功', data: _createdData });
         } else {
-          return this.json({status: 1001, message: '失败', data: {}})
+          return this.json({ status: 1001, message: '失败', data: {} })
         }
       } catch (error) {
-        return this.json({status: 403, message: error.message, data: {}});
+        return this.json({ status: 403, message: error.message, data: {} });
       }
     }
   }
@@ -506,14 +506,14 @@ module.exports = class extends enkel.controller.base {
    */
   async modifyTagAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
-      return this.json({status: 401, message: '缺少参数', data: {needLogin: true}});
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
     }
-    if (!this.checkLogin({username: params.phonenum, token: params.token})) {
-      return this.json({status: 401, message: '登录状态失效，请重新登录', data: {needLogin: true}});
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
     } else {
       try {
         let _searchCondition = JSON.parse(JSON.stringify(params));
@@ -541,12 +541,12 @@ module.exports = class extends enkel.controller.base {
           if (_createdData.hasOwnProperty('id')) {
             delete _createdData.id
           }
-          return this.json({status: 200, message: '成功', data: _createdData});
+          return this.json({ status: 200, message: '成功', data: _createdData });
         } else {
-          return this.json({status: 1001, message: '失败', data: {}})
+          return this.json({ status: 1001, message: '失败', data: {} })
         }
       } catch (error) {
-        return this.json({status: 403, message: error.message, data: {}});
+        return this.json({ status: 403, message: error.message, data: {} });
       }
     }
   }
@@ -558,7 +558,7 @@ module.exports = class extends enkel.controller.base {
    */
   async searchAction () {
     if (!this.isPost()) {
-      return this.json({status: 405, message: '请求方法不正确', data: {}});
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
     let _searchCondition = {};
@@ -622,7 +622,7 @@ module.exports = class extends enkel.controller.base {
         });
       }
     } catch (error) {
-      return this.json({status: 403, message: error.message, data: { list: [] }});
+      return this.json({ status: 403, message: error.message, data: { list: [] } });
     }
   }
 }
