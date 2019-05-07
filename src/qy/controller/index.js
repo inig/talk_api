@@ -35,6 +35,7 @@
  */
 const cheerio = require('cheerio');
 const axios = require('axios');
+const fs = require('fs')
 const qs = require('querystring');
 const jwt = require('jsonwebtoken');
 const secret = 'com.dei2';
@@ -153,10 +154,11 @@ module.exports = class extends enkel.controller.base {
     if (!this.isPost()) {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
-    if (!this.checkAuth()) {
-      return this.json({ status: 1001, message: '请求不合法', data: {} })
-    }
+    // if (!this.checkAuth()) {
+    //   return this.json({ status: 1001, message: '请求不合法', data: {} })
+    // }
     let params = await this.post();
+    console.log('....', params)
     if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
       return this.json({ status: 401, message: '发送失败', data: { needLogin: true } });
     } else {
@@ -170,30 +172,49 @@ module.exports = class extends enkel.controller.base {
         // let avatarPath = '/mnt/srv/web_static/plugins_admin/img';
         let avatarPath = '/Users/liangshan/workspace/workspace_chrome_extensions/img';
         try {
-          let uploadedFile = await this.upload({
-            accept: params.accept,
-            size: Number(params.ms) * 1024,
-            uploadDir: avatarPath,
-            rename: params.rn || false,
-            multiples: false
+          // let uploadedFile = await this.upload({
+          //   accept: params.accept,
+          //   size: Number(params.ms) * 1024,
+          //   uploadDir: avatarPath,
+          //   rename: params.rn || false,
+          //   multiples: false
+          // });
+
+          let originData = params.origin.replace(/^data:image\/\w+;base64,/, "");
+          var dataBuffer = new Buffer(originData, 'base64');
+          fs.writeFile(avatarPath + "/image.png", dataBuffer, function (err) {
+            if (err) {
+              res.send(err);
+            } else {
+              res.send("保存成功！");
+            }
+          });
+
+          let blurredData = params.blurred.replace(/^data:image\/\w+;base64,/, "");
+          var blurredBuffer = new Buffer(blurredData, 'base64');
+          fs.writeFile(avatarPath + "/image_blurred.png", blurredBuffer, function (err) {
+            if (err) {
+              res.send(err);
+            } else {
+              res.send("保存成功！");
+            }
           });
 
           let searchCondition = {};
           searchCondition['phonenum'] = params.phonenum;
           let fileUrl = `https://static.dei2.com/plugins_admin/img/${uploadedFile.filename}`;
-          let avatarStatus = await this.UserModel.update({
-            headIcon: fileUrl
-          }, {
-              where: searchCondition
-            });
-          if (avatarStatus[0] > 0) {
+
+          let createdData = await this.PigeonModel.create({
+
+          })
+          if (createdData[0] > 0) {
             return this.json({
-              status: 200, message: '头像修改成功', data: {
+              status: 200, message: '发送成功', data: {
                 path: fileUrl
               }
             });
           } else {
-            return this.json({ status: 401, message: '头像修改失败', data: {} });
+            return this.json({ status: 401, message: '发送失败', data: {} });
           }
         } catch (err) {
           return this.json({ status: 401, message: JSON.stringify(err) || '', data: {} });
