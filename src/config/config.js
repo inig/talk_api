@@ -36,22 +36,22 @@
 module.exports = {
   app_port: 3000,
   default_group: 'Home',
-  groups: ['Home', 'Zpm', 'Bd', 'wx', 'enkel', 'nem', 'spd'],
+  groups: ['Home', 'Zpm', 'Bd', 'wx', 'enkel', 'nem', 'spd', 'qy'],
   default_static: ['Static', '.well-known'], // 静态资源目录
   db: {
     ban: false, // 是否使用数据库 Sequelize
     type: 'mysql', // 数据库类型，支持mysql, sqlite, postgres, mssql
     storage: '', // 仅限SQLite
-    // host: '127.0.0.1', // 数据库地址
-    // port: '3306', // 数据库端口
-    // db_name: 'enkel', // 数据库名
-    // username: 'root', // 用户名
-    // password: 'root' // 密码
-    host: '123.57.148.237', // 数据库地址
+    host: '127.0.0.1', // 数据库地址
     port: '3306', // 数据库端口
-    db_name: 'talkapi', // 数据库名
-    username: 'talkapi', // 用户名
-    password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
+    db_name: 'enkel', // 数据库名
+    username: 'root', // 用户名
+    password: 'root' // 密码
+    // host: '123.57.148.237', // 数据库地址
+    // port: '3306', // 数据库端口
+    // db_name: 'talkapi', // 数据库名
+    // username: 'talkapi', // 用户名
+    // password: 'ecaf557f-4f0d-491e-9dc1-f478ce2a0d91' // 密码
   },
   redis: {
     ban: true, // 是否使用redis
@@ -61,10 +61,10 @@ module.exports = {
   },
   socket: {
     ban: false, // 是否开启websocket
-    type: 'wss',
+    type: 'ws',
     port: '3010',
     userKey: 'phonenum', // 用户名
     namespace: '/sk',
-    events: ['enkel-message']
+    events: ['enkel-message', 'qy-message']
   }
 }
