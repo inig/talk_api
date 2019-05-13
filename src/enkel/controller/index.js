@@ -436,4 +436,15 @@ module.exports = class extends enkel.controller.base {
       }
     }
   }
+
+  /**
+   * github oAuth 登录callback
+   */
+  async githubAction () {
+    return this.json({
+      status: 200,
+      message: '成功',
+      data: {}
+    })
+  }
 }
