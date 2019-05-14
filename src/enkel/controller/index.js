@@ -40,6 +40,11 @@ const jwt = require('jsonwebtoken');
 const secret = 'com.dei2';
 const tokenExpiresIn = '7d';
 
+const GitHubOptions = {
+  clientId: 'a054a4c2a2fa61650e47',
+  secret: '371dab46666ca7ae6867e6dc553fe4d49902a8e1'
+}
+
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http);
@@ -437,14 +442,105 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
+  getGitHubUserInfo (data) {
+    return new Promise(async (resolve) => {
+      await axios({
+        method: 'get',
+        url: 'https://api.github.com/user?access_token=' + data.accessToken,
+        timeout: 3 * 60 * 1000
+      }).catch(err => {
+        resolve({})
+      }).then(({ data }) => {
+        resolve(data.data)
+      })
+    })
+  }
+
+  formatArgs (argStr) {
+    let args = argStr.split('&')
+    let i = 0
+    let outArgs = {}
+    for (i; i < args.length; i++) {
+      let tempArg = args[i].split('=')
+      outArgs[tempArg[0]] = tempArg[1]
+    }
+    return outArgs
+  }
+
+  rdAction () {
+    let params = this.get()
+    console.log('....', 'https://github.com/login/oauth/authorize?client_id=' + GitHubOptions.clientId + '&scope=user,email&state=' + (new Date().getTime()))
+
+    this.response.setHeader('location', 'https://github.com/login/oauth/authorize?client_id=' + GitHubOptions.clientId + '&scope=user,email&state=' + (new Date().getTime() + '&redirect_uri=' + encodeURIComponent(params.redirectUrl)));
+    this.response.statusCode = '302'
+    return this.json({ status: 200, message: '成功' })
+  }
+
   /**
    * github oAuth 登录callback
    */
   async githubAction () {
-    return this.json({
-      status: 200,
-      message: '成功',
-      data: {}
+    let params = this.get()
+    console.log('github params: ', params)
+    let code = params.code || '57593fac5c707825f28b'
+    let path = 'https://github.com/login/oauth/access_token'
+    let requestParams = {
+      client_id: GitHubOptions.clientId,
+      client_secret: GitHubOptions.secret,
+      code: code
+    }
+    await axios({
+      method: 'post',
+      url: path,
+      timeout: 3 * 60 * 1000,
+      data: qs.stringify(requestParams)
+    }).catch(err => {
+      console.log('error 01: ', err.message)
+      return this.json({ status: 1002, message: err.message || '查询失败，请稍后再试', data: {} })
+    }).then(async ({ data }) => {
+      let args = this.formatArgs(data)
+      console.log('access_token: ', args)
+      if (args.hasOwnProperty('error')) {
+        // 错误
+        return this.json({
+          status: 1003,
+          message: args.error_description ? args.error_description.replace(/\+/g, ' ') : '登录失败，请重试',
+          data: {}
+        })
+      } else {
+        return args.access_token
+      }
+    }).then(async accessToken => {
+      await axios({
+        method: 'get',
+        url: 'https://api.github.com/user?access_token=' + accessToken,
+        timeout: 3 * 60 * 1000
+      }).catch(e => {
+        console.log('error 02: ', e.message)
+        return this.json({
+          status: 1003,
+          message: e.message || '登录失败',
+          data: {}
+        })
+      }).then((res) => {
+        console.log('user info: ', res.data)
+        if (Object.keys(res.data).length > 0) {
+          this.response.setHeader('location', decodeURIComponent(params.redirect_uri));
+          this.response.statusCode = '302'
+          return this.json({ status: 200, message: '成功' })
+          return this.json({
+            status: 200,
+            message: '成功',
+            data: res.data
+          })
+        } else {
+          return this.json({
+            status: 1003,
+            message: '登录失败',
+            data: {}
+          })
+        }
+      })
     })
   }
 }
