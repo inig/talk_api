@@ -45,6 +45,10 @@ module.exports = {
       type: Sequelize.INTEGER,
       default: -1
     },
+    caption: { // 问题
+      type: Sequelize.STRING,
+      defaultValue: ''
+    },
     question: { // 问题
       type: Sequelize.STRING,
       defaultValue: ''
