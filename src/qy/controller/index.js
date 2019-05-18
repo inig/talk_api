@@ -158,6 +158,7 @@ module.exports = class extends enkel.controller.base {
   }
 
   async createAction () {
+    const that = this
     if (!this.isPost()) {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
@@ -175,33 +176,34 @@ module.exports = class extends enkel.controller.base {
       if (!_isLegalLogin) {
         return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
       } else {
-        // let avatarPath = '/mnt/srv/web_static/plugins_admin/img';
-        let avatarPath = '/Users/liangshan/workspace/workspace_chrome_extensions/img';
+        let avatarPath = '/mnt/srv/web_static/qy/uploads/img';
+        // let avatarPath = '/Users/liangshan/workspace/workspace_chrome_extensions/img';
         try {
           let originData = params.origin.replace(/^data:image\/\w+;base64,/, "");
           var dataBuffer = Buffer.from(originData, 'base64');
           let imageName = getUUID()
           let blurredImageName = getUUID('blurred_')
           fs.writeFile(avatarPath + "/" + imageName + ".png", dataBuffer, function (err) {
-            // if (err) {
-            //   res.send(err);
-            // } else {
-            //   res.send("保存成功！");
-            // }
+            if (err) {
+              return that.json({
+                status: 1004,
+                message: err.message || '发送失败，请稍后再试',
+                data: {}
+              })
+            }
           });
 
           let blurredData = params.blurred.replace(/^data:image\/\w+;base64,/, "");
           var blurredBuffer = Buffer.from(blurredData, 'base64');
           fs.writeFile(avatarPath + "/" + blurredImageName + ".png", blurredBuffer, function (err) {
-            // if (err) {
-            //   res.send(err);
-            // } else {
-            //   res.send("保存成功！");
-            // }
+            if (err) {
+              return that.json({
+                status: 1004,
+                message: err.message || '发送失败，请稍后再试',
+                data: {}
+              })
+            }
           });
-
-          let searchCondition = {};
-          searchCondition['phonenum'] = params.phonenum;
 
           let createdData = await this.PigeonModel.create({
             author: params.phonenum,
@@ -217,7 +219,8 @@ module.exports = class extends enkel.controller.base {
             return this.json({
               status: 200, message: '发送成功', data: {
                 author: params.phonenum,
-                path: `https://static.dei2.com/qy/uploads/img/${imageName}.png`
+                path: `https://static.dei2.com/qy/uploads/img/${blurredImageName}.png`,
+                caption: params.question
               }
             });
           } else {
