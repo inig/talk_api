@@ -58,6 +58,20 @@ module.exports = class extends enkel.controller.base {
 
     this.PigeonModel = this.models('qy/pigeon');
     this.UserModel = this.models('enkel/user');
+    this.AnswerModel = this.models('qy/answer');
+
+    this.PigeonModel.belongsTo(this.UserModel, {
+      // as: 'user',
+      foreignKey: 'author',
+      targetKey: 'phonenum'
+    })
+
+    this.PigeonModel.hasMany(this.AnswerModel, {
+      foreignKey: 'pid',
+      sourceKey: 'uuid'
+    })
+
+    this.Op = this.Sequelize.Op
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', '*');
@@ -133,7 +147,7 @@ module.exports = class extends enkel.controller.base {
 
   async indexAction () {
     if (!this.isPost()) {
-      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+      return this.json({ status: 405, message: '请求姿势不正确', data: {} });
     }
     if (!this.checkAuth()) {
       return this.json({ status: 1001, message: '请求不合法', data: {} })
@@ -160,7 +174,7 @@ module.exports = class extends enkel.controller.base {
   async createAction () {
     const that = this
     if (!this.isPost()) {
-      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+      return this.json({ status: 405, message: '请求姿势不正确', data: {} });
     }
     // if (!this.checkAuth()) {
     //   return this.json({ status: 1001, message: '请求不合法', data: {} })
@@ -176,8 +190,8 @@ module.exports = class extends enkel.controller.base {
       if (!_isLegalLogin) {
         return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
       } else {
-        let avatarPath = '/mnt/srv/web_static/qy/uploads/img';
-        // let avatarPath = '/Users/liangshan/workspace/workspace_chrome_extensions/img';
+        // let avatarPath = '/mnt/srv/web_static/qy/uploads/img';
+        let avatarPath = '/Users/liangshan/workspace/workspace_chrome_extensions/img';
         try {
           let originData = params.origin.replace(/^data:image\/\w+;base64,/, "");
           var dataBuffer = Buffer.from(originData, 'base64');
@@ -213,7 +227,10 @@ module.exports = class extends enkel.controller.base {
             score: 0,
             qid: -1,
             question: params.question,
-            answer: params.answer
+            caption: params.question,
+            answer: params.answer,
+            startTime: params.startTime || (new Date()).getTime(),
+            endTime: params.endTime || ((new Date()).getTime() + 30 * 24 * 60 * 60 * 1000)
           })
           if (createdData) {
             return this.json({
@@ -228,6 +245,176 @@ module.exports = class extends enkel.controller.base {
           }
         } catch (err) {
           return this.json({ status: 401, message: JSON.stringify(err) || '', data: {} });
+        }
+      }
+    }
+  }
+
+  async qAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求姿势不正确', data: {} });
+    }
+    // if (!this.checkAuth()) {
+    //   return this.json({ status: 1001, message: '请求不合法', data: {} })
+    // }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
+      return this.json({ status: 401, message: '发送失败', data: { needLogin: true } });
+    } else {
+      let _isLegalLogin = this.checkLogin({
+        username: params.phonenum,
+        token: params.token
+      });
+      if (!_isLegalLogin) {
+        return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
+      } else {
+        let _searchCondition = JSON.parse(JSON.stringify(params));
+        if (_searchCondition.token) {
+          delete _searchCondition.token
+        }
+        if (_searchCondition.phonenum) {
+          delete _searchCondition.phonenum
+        }
+        if (_searchCondition.pageIndex) {
+          delete _searchCondition.pageIndex
+        }
+        if (_searchCondition.pageSize) {
+          delete _searchCondition.pageSize
+        }
+        if (_searchCondition.offsetCount) {
+          delete _searchCondition.offsetCount
+        }
+        let pageIndex = Number(params.pageIndex) || 1;
+        let pageSize = Number(params.pageSize) || 30;
+        let offsetCount = Number(params.offsetCount) || 0
+
+        let pigeonList
+        if (params.startTime) {
+          // 请求某一时间之后的数据
+          pigeonList = await this.PigeonModel.findAll({
+            where: {
+              startTime: {
+                [this.Op.gt]: params.startTime
+              },
+              status: 1
+            },
+            limit: pageSize,
+            offset: (pageIndex - 1) * pageSize + offsetCount,
+            attributes: { exclude: ['id', 'answer', 'qid'] },
+            include: [
+              {
+                model: this.UserModel,
+                // as: 'user2',
+                attributes: {
+                  exclude: ['id', 'password', 'token', 'settings']
+                }
+              },
+              {
+                model: this.AnswerModel,
+                attributes: {
+                  exclude: ['id']
+                }
+              }
+            ]
+          })
+        } else {
+          pigeonList = await this.PigeonModel.findAll({
+            where: _searchCondition,
+            limit: pageSize,
+            offset: (pageIndex - 1) * pageSize + offsetCount,
+            attributes: {
+              exclude: ['id', 'answer', 'qid']
+            },
+            include: [
+              {
+                model: this.UserModel,
+                attributes: {
+                  exclude: ['id', 'password', 'token', 'settings']
+                }
+              },
+              {
+                model: this.AnswerModel,
+                attributes: {
+                  exclude: ['id']
+                }
+              }
+            ]
+          });
+        }
+        pigeonList.forEach(item => {
+          item.score = item.qy_answers.length
+          let hasTheUser = item.qy_answers.some(itm => String(itm.uid) === String(params.phonenum))
+          if (hasTheUser) {
+            item.blurred = ''
+            delete item.blurred
+          } else {
+            item.origin = ''
+            delete item.origin
+          }
+          Object.assign(item, {
+            caption: item.question
+          })
+          item.qy_answers.length = 0
+          delete item.qy_answers
+        })
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: pigeonList || [],
+            count: (pigeonList || []).length,
+            pageIndex: pageIndex,
+            pageSize: pageSize
+          }
+        });
+      }
+    }
+  }
+
+  async decodeAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求姿势不正确', data: {} });
+    }
+    // if (!this.checkAuth()) {
+    //   return this.json({ status: 1001, message: '请求不合法', data: {} })
+    // }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || String(params.phonenum) === '') {
+      return this.json({ status: 401, message: '发送失败', data: { needLogin: true } });
+    } else {
+      let _isLegalLogin = this.checkLogin({
+        username: params.phonenum,
+        token: params.token
+      });
+      if (!_isLegalLogin) {
+        return this.json({ status: 401, message: '登录状态失效,请重新登录', data: { needLogin: true } });
+      } else {
+        await this.AnswerModel.findOrCreate({
+          where: {
+            uid: params.phonenum,
+            pid: params.uuid
+          }
+        })
+        let decodedData = await this.PigeonModel.findOne({
+          where: {
+            uuid: params.uuid,
+            answer: params.answer
+          },
+          attributes: { exclude: ['id', 'answer', 'qid'] }
+        });
+        if (decodedData) {
+          if (decodedData.dataValues.hasOwnProperty('score')) {
+            decodedData.dataValues.score += 1
+          }
+          return this.json({
+            status: 200,
+            message: '成功',
+            data: decodedData
+          })
+        } else {
+          return this.json({
+            status: 1001,
+            message: '解密失败',
+            data: {}
+          })
         }
       }
     }
