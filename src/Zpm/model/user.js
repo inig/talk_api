@@ -27,43 +27,46 @@ module.exports = {
     },
     nickname: {
       type: Sequelize.STRING,
-        defaultValue: ''
+      defaultValue: ''
     },
     headIcon: {
       type: Sequelize.STRING,
-        defaultValue: ''
+      defaultValue: ''
     },
     lastLoginTime: {
       type: Sequelize.STRING,
-        defaultValue: (+new Date())
+      defaultValue: (+new Date())
     },
     lastLoginIp: {
       type: Sequelize.STRING,
-        defaultValue: ''
+      defaultValue: ''
     },
     birthday: {
       type: Sequelize.STRING,
-        defaultValue: (+new Date())
+      defaultValue: (+new Date())
     },
     gender: {
       type: Sequelize.INTEGER,
-        defaultValue: 1
+      defaultValue: 1
     },
     website: {
       type: Sequelize.STRING,
-        defaultValue: ''
+      defaultValue: ''
     },
     status: {
       type: Sequelize.INTEGER,
-        defaultValue: 1
+      defaultValue: 1
+    },
+    uid: {
+      type: Sequelize.INTEGER
     },
     token: {
       type: Sequelize.TEXT,
-        defaultValue: ''
+      defaultValue: ''
     },
     plugins: {
       type: Sequelize.TEXT,
-        defaultValue: ''
+      defaultValue: ''
     },
     role: {
       type: Sequelize.INTEGER
