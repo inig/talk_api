@@ -33,11 +33,35 @@
 /**
  * Created by liangshan on 2017/11/13.
  */
+const axios = require('axios')
+const qs = require('querystring')
 module.exports = class extends enkel.controller.base {
   init (http) {
     super.init(http)
 
     this.UserModel = this.models('Home/user')
+  }
+
+  async indexAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    let params = await this.post()
+    if (params.data && (params.method.toLowerCase() === 'get')) {
+      params.url += (params.url.indexOf('?') > -1 ? '&' : '?') + params.data
+    }
+    if (params.data && (params.method.toLowerCase() === 'post')) {
+      params.data = qs.parse(params.data)
+      if (params.data.values) {
+        params.data.values = JSON.parse(params.data.values)
+      }
+    }
+    console.log(params)
+    return axios(params).then(({ data }) => {
+      return this.json(data)
+    }).catch(err => {
+      return this.json({ status: 1001, message: err.message })
+    })
   }
 
   // indexAction() {
