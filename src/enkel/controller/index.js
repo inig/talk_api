@@ -708,10 +708,7 @@ module.exports = class extends enkel.controller.base {
   }
 
   async validCodeAction () {
-    if (!this.isPost()) {
-      return this.json({ status: 1001, message: '请求方法不正确', data: null });
-    }
-    let params = await this.post();
+    let params = this.get();
     if (!params.code) {
       return this.json({ status: 1003, message: 'Code不能为空', data: null })
     }
