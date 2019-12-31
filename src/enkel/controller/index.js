@@ -51,6 +51,10 @@ module.exports = class extends enkel.controller.base {
 
     this.UserModel = this.models('enkel/user');
 
+    this.CodeModel = this.models('enkel/code');
+
+    this.Op = this.Sequelize.Op;
+
     this.response.setHeader('Access-Control-Allow-Origin', '*');
     this.response.setHeader('Access-Control-Allow-Headers', '*');
     this.response.setHeader('Access-Control-Allow-Methods', '*');
@@ -542,5 +546,197 @@ module.exports = class extends enkel.controller.base {
         }
       })
     })
+  }
+
+  S4 () {
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+  }
+  getUUID () {
+    return this.S4() + this.S4() + '-' + this.S4() + this.S4() + '-' + this.S4() + this.S4()
+  }
+
+  /**
+   * 生成 视频播放的code
+   */
+  async createCodeAction () {
+    let code = this.getUUID()
+    await this.CodeModel.create({
+      expiredAt: (new Date()).getTime() + 24 * 60 * 60 * 1000,
+      type: '1',
+      code: code,
+      deviceId: ''
+    });
+    let res = await this.CodeModel.findOne({
+      where: { code: code },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: {
+          code: code
+        }
+      })
+    }
+  }
+
+  async createVipCodeAction () {
+    let code = this.getUUID()
+    await this.CodeModel.create({
+      expiredAt: (new Date()).getTime() + 30 * 24 * 60 * 60 * 1000,
+      type: '2',
+      code: code,
+      deviceId: ''
+    });
+    let res = await this.CodeModel.findOne({
+      where: { code: code },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: res
+      })
+    }
+  }
+
+  async createSuperCodeAction () {
+    let code = this.getUUID()
+    await this.CodeModel.create({
+      expiredAt: (new Date()).getTime() + 99 * 12 * 30 * 24 * 60 * 60 * 1000,
+      type: '3',
+      code: code,
+      deviceId: ''
+    });
+    let res = await this.CodeModel.findOne({
+      where: { code: code },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: res
+      })
+    }
+  }
+
+  /**
+   * 获取 视频播放的code
+   */
+  async getCodeAction () {
+    let res = await this.CodeModel.findOne({
+      where: {
+        expiredAt: {
+          [this.Op.gt]: (new Date()).getTime()
+        },
+        type: '1'
+      },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: res
+      })
+    }
+  }
+
+  async getVipCodeAction () {
+    let res = await this.CodeModel.findOne({
+      where: {
+        expiredAt: {
+          [this.Op.gt]: (new Date()).getTime()
+        },
+        type: '2'
+      },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: res
+      })
+    }
+  }
+
+  async getSuperCodeAction () {
+    let res = await this.CodeModel.findOne({
+      where: {
+        expiredAt: {
+          [this.Op.gt]: (new Date()).getTime()
+        },
+        type: '3'
+      },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: res
+      })
+    }
+  }
+
+  async validCodeAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 1001, message: '请求方法不正确', data: null });
+    }
+    if (!this.checkAuth()) {
+      return this.json({ status: 1002, message: '请求不合法', data: null })
+    }
+    let params = await this.post();
+    if (!params.code) {
+      return this.json({ status: 1003, message: 'Code不能为空', data: null })
+    }
+    let res = await this.CodeModel.findOne({
+      where: {
+        expiredAt: {
+          [this.Op.gt]: (new Date()).getTime()
+        },
+        code: params.code
+      },
+      attributes: { exclude: ['id', 'expiredAt', 'createdAt', 'updatedAt', 'deviceId', 'type'] }
+    });
+    if (!res) {
+      return this.json({
+        status: 1001,
+        data: null
+      })
+    } else {
+      return this.json({
+        status: 200,
+        data: res
+      })
+    }
   }
 }

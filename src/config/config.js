@@ -60,7 +60,7 @@ module.exports = {
     password: '*#redis*#' // redis密码
   },
   socket: {
-    ban: false, // 是否开启websocket
+    ban: true, // 是否开启websocket
     type: 'wss',
     port: '3010',
     userKey: 'phonenum', // 用户名
