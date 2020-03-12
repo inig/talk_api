@@ -60,7 +60,8 @@ module.exports = class extends enkel.controller.base {
       return this.json({
         status: 200,
         message: '成功',
-        data: data.data.data || []
+        data: data.data.data || [],
+        isEndPage: data.data.data.length < limit
       })
     })
   }
@@ -75,7 +76,65 @@ module.exports = class extends enkel.controller.base {
       return this.json({
         status: 200,
         message: '成功',
-        data: data.data.data || []
+        data: data.data.data || [],
+        isEndPage: data.data.data.length < limit
+      })
+    })
+  }
+
+  /**
+   * 电台列表
+   */
+  async getFmAnchroDianTaiListDetailAction () {
+    let params = this.get()
+    let offset = ((params.pageIndex - 1) || 0) * (params.pageSize || 20)
+    let limit = params.pageSize || 20
+    await axios.get(`http://yiapi.xinli001.com/fm/diantai-jiemu-list.json?offset=${offset}&limit=${limit}&diantai_id=${params.id}&key=${this.XINLI_KEY}`).catch(err => {
+      return this.json({ status: 1002, message: err.message || '获取失败，请稍后再试', data: {} })
+    }).then(data => {
+      return this.json({
+        status: 200,
+        message: '成功',
+        data: data.data.data || [],
+        isEndPage: data.data.data.length < limit
+      })
+    })
+  }
+
+  /**
+   * Banner，按tag搜索
+   */
+  async getFmAnchroListByTagAction () {
+    let params = this.get()
+    let offset = ((params.pageIndex - 1) || 0) * (params.pageSize || 20)
+    let limit = params.pageSize || 20
+    await axios.get(`http://bapi.xinli001.com/fm2/broadcast_list.json/?offset=${offset}&speaker_id=0&tag=${encodeURIComponent(params.tag)}&rows=${limit}&key=${this.XINLI_KEY}`).catch(err => {
+      return this.json({ status: 1002, message: err.message || '获取失败，请稍后再试', data: {} })
+    }).then(data => {
+      return this.json({
+        status: 200,
+        message: '成功',
+        data: data.data.data || [],
+        isEndPage: data.data.data.length < limit
+      })
+    })
+  }
+
+  /**
+   * 搜索
+   */
+  async getFmAnchroListByKwAction () {
+    let params = this.get()
+    let offset = ((params.pageIndex - 1) || 0) * (params.pageSize || 20)
+    let limit = params.pageSize || 20
+    await axios.get(`http://bapi.xinli001.com/fm2/broadcast_list.json/?q=${encodeURIComponent(data.key)}&is_teacher=&offset=${offset}&speaker_id=0&rows=${limit}&key=${this.XINLI_KEY}`).catch(err => {
+      return this.json({ status: 1002, message: err.message || '获取失败，请稍后再试', data: {} })
+    }).then(data => {
+      return this.json({
+        status: 200,
+        message: '成功',
+        data: data.data.data || [],
+        isEndPage: data.data.data.length < limit
       })
     })
   }
