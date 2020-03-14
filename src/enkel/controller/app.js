@@ -127,7 +127,7 @@ module.exports = class extends enkel.controller.base {
     let params = this.get()
     let offset = ((params.pageIndex - 1) || 0) * (params.pageSize || 20)
     let limit = params.pageSize || 20
-    await axios.get(`http://bapi.xinli001.com/fm2/broadcast_list.json/?q=${encodeURIComponent(data.key)}&is_teacher=&offset=${offset}&speaker_id=0&rows=${limit}&key=${this.XINLI_KEY}`).catch(err => {
+    await axios.get(`http://bapi.xinli001.com/fm2/broadcast_list.json/?q=${encodeURIComponent(params.key)}&is_teacher=&offset=${offset}&speaker_id=0&rows=${limit}&key=${this.XINLI_KEY}`).catch(err => {
       return this.json({ status: 1002, message: err.message || '获取失败，请稍后再试', data: {} })
     }).then(data => {
       return this.json({
