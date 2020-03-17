@@ -47,7 +47,9 @@ module.exports = class extends enkel.controller.base {
     let offsetCount = Number(params.offsetCount) || 0;
     try {
       let res = await this.EnkelBannerEditorModel.findAll({
-        where: _searchConditions,
+        where: Object.assign(_searchConditions, {
+          sort: -1
+        }),
         limit: pageSize,
         offset: (pageIndex - 1) * pageSize + offsetCount,
         attributes: {
@@ -97,12 +99,54 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
+  async sortedListAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    try {
+      let res = await this.EnkelBannerEditorModel.findAll({
+        where: {
+          sort: {
+            [this.Op.gt]: -1
+          }
+        },
+        attributes: {
+          exclude: ['id']
+        },
+        include: [{
+          model: this.EnkelBannerModel,
+          // as: 'user2',
+          attributes: {
+            exclude: ['id']
+          }
+        }],
+        order: [
+          ['sort', 'ASC']
+        ]
+      });
+      if (res) {
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: res || []
+          }
+        });
+      } else {
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: []
+          }
+        });
+      }
+    } catch (error) {
+      return this.json({ status: 403, message: '查询失败，请稍后再试', data: {} });
+    }
+  }
+
   async addAction () {
     if (!this.isPost()) {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
-    console.log('params: ', params)
     // let params = this.get();
     try {
       let _requestData = {
@@ -146,6 +190,7 @@ module.exports = class extends enkel.controller.base {
     if (!params.uuid || params.uuid === '') {
       return this.json({ status: 401, message: '缺少参数', data: {} });
     }
+
     try {
       let _requestData = {
         updateTime: +new Date()
@@ -155,21 +200,16 @@ module.exports = class extends enkel.controller.base {
       }
       let response = await this.EnkelBannerEditorModel.update(_requestData, {
         where: {
-          uuid: {
-            [this.Op.like]: '%' + params.uuid
-          }
+          uuid: params.uuid
         },
         attributes: {
           exclude: ['id']
         }
       });
-      if (response) {
+      if (response[0] > 0) {
         if (response.hasOwnProperty('id')) {
           delete response.id
         }
-        // if (response.hasOwnProperty('uuid')) {
-        //   response.uuid = response.uuid.split('-').pop()
-        // }
         return this.json({ status: 200, message: '成功', data: response });
       } else {
         return this.json({ status: 1001, message: '失败', data: {} })
@@ -203,24 +243,11 @@ module.exports = class extends enkel.controller.base {
         }
       })
     } else {
-      // if (bannerData.status) {
-      //   return this.json({
-      //     status: 1002,
-      //     message: '删除失败，该banner正在被使用',
-      //     data: {
-      //       uuid: params.uuid
-      //     }
-      //   })
-      // } else {
-
-      // }
     }
     try {
       let response = await this.EnkelBannerEditorModel.destroy({
         where: {
-          uuid: {
-            [this.Op.like]: '%' + params.uuid
-          }
+          uuid: params.uuid
         }
       });
       if (response > 0) {
@@ -231,6 +258,64 @@ module.exports = class extends enkel.controller.base {
     } catch (error) {
       return this.json({ status: 403, message: '删除失败，请稍后再试', data: {} });
     }
+  }
+
+  async saveAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    let params = await this.post();
+    // let params = this.get();
+    let list = []
+    try {
+      list = JSON.parse(params.list)
+    } catch (err) {
+      list = []
+    }
+    if (!list || (list.length < 1)) {
+      // 至少要保留一条
+      return this.json({ status: 1001, message: '至少要保留一条数据', data: {} })
+    }
+
+    // 清除旧的sort
+    await this.EnkelBannerEditorModel.update({
+      sort: -1
+    }, {
+      where: {
+        sort: {
+          [this.Op.gt]: -1
+        }
+      }
+    });
+    enkel.db.transaction(t => {
+      let tranArray = []
+      list.forEach((item, index) => {
+        tranArray.push(this.EnkelBannerEditorModel.update({
+          sort: item.sort
+        }, {
+          where: {
+            uuid: item.uuid
+          },
+          transaction: t
+        }).then(res => {
+          if (res && (res[0] < 1)) {
+            // 有一条更新失败，则强制回滚事务
+            throw new Error()
+          } else {
+            return res
+          }
+        }))
+      })
+      return Promise.all(tranArray)
+    }).then(result => {
+      if (result.filter(item => item[0] < 1).length > 0) {
+        return this.json({ status: 1003, message: '保存失败', data: {} })
+      } else {
+        return this.json({ status: 200, message: '保存成功', data: list.map(item => item.uuid) })
+      }
+    }).catch(err => {
+      return this.json({ status: 1002, message: '保存失败', data: {} })
+    })
   }
 
 }

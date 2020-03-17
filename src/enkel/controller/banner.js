@@ -146,15 +146,13 @@ module.exports = class extends enkel.controller.base {
       }
       let response = await this.EnkelBannerModel.update(_requestData, {
         where: {
-          uuid: {
-            [this.Op.like]: '%' + params.uuid
-          }
+          uuid: params.uuid
         },
         attributes: {
           exclude: ['id']
         }
       });
-      if (response) {
+      if (response[0] > 0) {
         if (response.hasOwnProperty('id')) {
           delete response.id
         }
