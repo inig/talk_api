@@ -277,19 +277,69 @@ module.exports = class extends enkel.controller.base {
       return this.json({ status: 1001, message: '至少要保留一条数据', data: {} })
     }
 
-    // 清除旧的sort
-    await this.EnkelBannerEditorModel.update({
-      sort: -1
-    }, {
-      where: {
-        sort: {
-          [this.Op.gt]: -1
-        }
-      }
-    });
     enkel.db.transaction(t => {
       let tranArray = []
+      // 清除旧的sort
+      tranArray.push(this.EnkelBannerEditorModel.update({
+        sort: -1
+      }, {
+        where: {
+          sort: {
+            [this.Op.gt]: -1
+          }
+        },
+        transaction: t
+      }).then(async (res) => {
+        let _count = await this.EnkelBannerEditorModel.count({
+          where: {
+            sort: {
+              [this.Op.gt]: -1
+            }
+          }
+        })
+        if (res[0] < _count) {
+          throw new Error()
+        } else {
+          return res
+        }
+      }))
+      // 清除素材的status
+      tranArray.push(this.EnkelBannerModel.update({
+        status: false
+      }, {
+        where: {
+          status: true
+        },
+        transaction: t
+      }).then(async (res) => {
+        let _count = await this.EnkelBannerModel.count({
+          where: {
+            status: true
+          }
+        })
+        if (res[0] < _count) {
+          // 强制回滚事务
+          throw new Error()
+        } else {
+          return res
+        }
+      }))
       list.forEach((item, index) => {
+        tranArray.push(this.EnkelBannerModel.update({
+          status: true
+        }, {
+          where: {
+            uuid: item.materialId
+          },
+          transaction: t
+        }).then(res => {
+          if (res && (res[0] < 1)) {
+            // 有一条更新失败，则强制回滚事务
+            throw new Error()
+          } else {
+            return res
+          }
+        }))
         tranArray.push(this.EnkelBannerEditorModel.update({
           sort: item.sort
         }, {

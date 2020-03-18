@@ -6,6 +6,11 @@ module.exports = class extends enkel.controller.base {
     super.init(http);
 
     this.EnkelBannerModel = this.models('enkel/banner');
+    this.EnkelBannerEditorModel = this.models('enkel/bannerEditor');
+    this.EnkelBannerEditorModel.belongsTo(this.EnkelBannerModel, {
+      foreignKey: 'materialId',
+      targetKey: 'uuid'
+    })
 
     this.Op = this.Sequelize.Op;
 
@@ -94,6 +99,7 @@ module.exports = class extends enkel.controller.base {
       let _requestData = {
         title: params.title,
         cover: params.cover,
+        type: params.type,
         postTime: +new Date(),
         updateTime: +new Date(),
         status: false
@@ -140,6 +146,9 @@ module.exports = class extends enkel.controller.base {
       }
       if (params.url) {
         _requestData.url = params.url
+      }
+      if (params.type) {
+        _requestData.type = params.type
       }
       if (params.status) {
         _requestData.status = params.status
@@ -219,6 +228,57 @@ module.exports = class extends enkel.controller.base {
       }
     } catch (error) {
       return this.json({ status: 403, message: '删除失败，请稍后再试', data: {} });
+    }
+  }
+
+  async getListAction () {
+    // if (!this.isPost()) {
+    //   return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    // }
+    try {
+      let res = await this.EnkelBannerEditorModel.findAll({
+        where: {
+          sort: {
+            [this.Op.gt]: -1
+          }
+        },
+        attributes: {
+          exclude: ['id']
+        },
+        include: [{
+          model: this.EnkelBannerModel,
+          // as: 'user2',
+          attributes: {
+            exclude: ['id']
+          }
+        }],
+        order: [
+          ['sort', 'ASC']
+        ]
+      });
+      if (res) {
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: res.map(item => {
+              return {
+                cover: item.enkel_banner.cover,
+                type: item.enkel_banner.type,
+                url: item.enkel_banner.url,
+                title: item.enkel_banner.title,
+                sort: item.sort
+              }
+            }) || []
+          }
+        });
+      } else {
+        return this.json({
+          status: 200, message: '查询成功', data: {
+            list: []
+          }
+        });
+      }
+    } catch (error) {
+      return this.json({ status: 403, message: '查询失败，请稍后再试', data: {} });
     }
   }
 
