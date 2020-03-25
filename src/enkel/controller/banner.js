@@ -187,8 +187,8 @@ module.exports = class extends enkel.controller.base {
       return this.json({ status: 401, message: '缺少参数', data: {} });
     }
     let bannerData = await this.EnkelBannerModel.findOne({
-      uuid: {
-        [this.Op.like]: '%' + params.uuid
+      where: {
+        uuid: params.uuid
       },
       attributes: {
         exclude: ['id']
