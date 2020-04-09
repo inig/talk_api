@@ -328,7 +328,9 @@ module.exports = class extends enkel.controller.base {
     let loginWith = '';
     let loginUserCount = await this.UserModel.count({
       where: { phonenum: params.phonenum },
-      attributes: { exclude: ['id', 'password'] }
+      attributes: { exclude: ['id', 'password'] },
+      group: 'id'
+    }).catch(err => {
     });
     if (loginUserCount < 1) {
       // 注册新用户
