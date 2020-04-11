@@ -300,8 +300,8 @@ module.exports = class extends enkel.controller.base {
       token: loginToken,
       lastLoginTime: (+new Date())
     }, {
-        where: searchCondition
-      });
+      where: searchCondition
+    });
     if (updateLoginStatus[0] > 0) {
       // 更新用户登录token成功
       loginUser.dataValues.token = loginToken;
@@ -338,8 +338,8 @@ module.exports = class extends enkel.controller.base {
         username: params.phonenum,
         password: params.password,
         phonenum: params.phonenum,
-        nickname: '',
-        gender: 2,
+        nickname: params.params,
+        gender: params.gender || 2,
         plugins: '',
         role: 1
       });
@@ -465,8 +465,8 @@ module.exports = class extends enkel.controller.base {
         let ModifyStatus = await this.UserModel.update({
           password: params.newPass,
         }, {
-            where: searchCondition
-          });
+          where: searchCondition
+        });
 
         if (ModifyStatus[0] > 0) {
           let userInfo = await this.UserModel.findOne({
@@ -515,8 +515,8 @@ module.exports = class extends enkel.controller.base {
           let avatarStatus = await this.UserModel.update({
             headIcon: fileUrl
           }, {
-              where: searchCondition
-            });
+            where: searchCondition
+          });
           if (avatarStatus[0] > 0) {
             return this.json({
               status: 200, message: '头像修改成功', data: {
@@ -820,10 +820,10 @@ module.exports = class extends enkel.controller.base {
           let updatedData = await this.UserModel.update({
             settings: params.settings
           }, {
-              where: {
-                phonenum: params.phonenum
-              }
-            });
+            where: {
+              phonenum: params.phonenum
+            }
+          });
           if (updatedData[0] > 0) {
             // 更新用户登录token成功
             return this.json({
