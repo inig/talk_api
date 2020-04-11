@@ -335,10 +335,10 @@ module.exports = class extends enkel.controller.base {
     if (loginUserCount < 1) {
       // 注册新用户
       await this.UserModel.create({
-        username: params.phonenum,
+        username: params.username || params.phonenum,
         password: params.password,
         phonenum: params.phonenum,
-        nickname: params.params,
+        nickname: params.nickname || params.phonenum,
         gender: params.gender || 2,
         plugins: '',
         role: 1
