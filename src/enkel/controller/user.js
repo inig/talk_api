@@ -259,7 +259,7 @@ module.exports = class extends enkel.controller.base {
     let loginWith = '';
     let loginUser = await this.UserModel.findOne({
       where: { username: params.username, password: params.password },
-      attributes: { exclude: ['id', 'password', 'createAt', 'updateAt'] },
+      attributes: { exclude: ['id', 'createAt', 'updateAt'] },
       include: [{
         model: this.RoleModel,
         attributes: {
@@ -270,7 +270,7 @@ module.exports = class extends enkel.controller.base {
     if (!loginUser) {
       loginUser = await this.UserModel.findOne({
         where: { phonenum: params.username, password: params.password },
-        attributes: { exclude: ['id', 'password', 'createAt', 'updateAt'] },
+        attributes: { exclude: ['id', 'createAt', 'updateAt'] },
         include: [{
           model: this.RoleModel,
           attributes: {
@@ -344,7 +344,12 @@ module.exports = class extends enkel.controller.base {
         role: 1
       });
       let count = await this.UserModel.count({ where: { phonenum: params.phonenum } });
-      return this.json({ status: 200, message: count > 0 ? '注册成功' : '注册失败', data: {} });
+      return this.json({
+        status: 200, message: count > 0 ? '注册成功' : '注册失败', data: {
+          username: params.username || params.phonenum,
+          phonenum: params.phonenum
+        }
+      });
     } else {
       // 用户名已存在
       return this.json({ status: 401, message: '手机号已存在', data: {} });
