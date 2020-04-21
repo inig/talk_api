@@ -135,23 +135,36 @@ module.exports = class extends enkel.controller.base {
     if (params.answer === '') {
       return this.json({ status: 401, message: 'Answer不能为空', data: {} });
     }
-    let updateParams = {
-      answer: params.answer
-    }
-    console.log('>>>>>>>>>', updateParams)
-    let response = await this.SurveyModel.update(updateParams, {
+    let response = await this.SurveyModel.findOne({
       where: { uuid: params.uuid },
       attributes: { exclude: ['id'] }
     });
-    if (response[0] > 0) {
-      return this.json({
-        status: 200, message: '调查更新成功', data: {
-          uuid: params.uuid
-        }
+    console.log('@@@@@@@', response)
+    if (response) {
+      let answer = JSON.parse(response.dataValues.answer)
+      answer.unshift(JSON.parse(params.answer))
+      let updateParams = {
+        answer: answer
+      }
+      console.log('>>>>>>>>>', updateParams)
+      let res = await this.SurveyModel.update(updateParams, {
+        where: { uuid: params.uuid },
+        attributes: { exclude: ['id'] }
       });
+      console.log('==========', res[0])
+      if (res[0] > 0) {
+        return this.json({
+          status: 200, message: '调查更新成功', data: {
+            uuid: params.uuid
+          }
+        });
+      } else {
+        return this.json({ status: 1002, message: '调查更新失败', data: {} });
+      }
     } else {
-      return this.json({ status: 1002, message: '调查更新失败', data: {} });
+      return this.json({ status: 1002, message: '调查更新失败,请稍后再试', data: {} });
     }
+
   }
 
 
