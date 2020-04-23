@@ -259,7 +259,7 @@ module.exports = class extends enkel.controller.base {
     let loginWith = '';
     let loginUser = await this.UserModel.findOne({
       where: { username: params.username, password: params.password },
-      attributes: { exclude: ['id', 'createAt', 'updateAt'] },
+      attributes: { exclude: ['id', 'createAt', 'updateAt', 'password'] },
       include: [{
         model: this.RoleModel,
         attributes: {
@@ -270,7 +270,7 @@ module.exports = class extends enkel.controller.base {
     if (!loginUser) {
       loginUser = await this.UserModel.findOne({
         where: { phonenum: params.username, password: params.password },
-        attributes: { exclude: ['id', 'createAt', 'updateAt'] },
+        attributes: { exclude: ['id', 'createAt', 'updateAt', 'password'] },
         include: [{
           model: this.RoleModel,
           attributes: {
