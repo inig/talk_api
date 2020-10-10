@@ -36,7 +36,7 @@
 module.exports = {
   app_port: 3000,
   default_group: 'Home',
-  groups: ['Home', 'Zpm', 'Bd', 'wx', 'enkel', 'nem', 'spd', 'qy'],
+  groups: ['Home', 'Zpm', 'Bd', 'wx', 'enkel', 'nem', 'spd', 'qy', 'inig'],
   default_static: ['Static', '.well-known'], // 静态资源目录
   db: {
     ban: false, // 是否使用数据库 Sequelize
