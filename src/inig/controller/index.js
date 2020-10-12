@@ -4,11 +4,13 @@ const http = require('http')
 const fs = require('fs')
 const path = require('path')
 
-// const DIR = '/Users/liangshan/Downloads/workspace/tmp';
-const DIR = '/mnt/srv/web_static/images/tmp';
+const ffmpeg = require('fluent-ffmpeg')
 
-// const DOMAIN = 'http://10.2.5.98'
-const DOMAIN = 'http://static.dei2.com/images/tmp'
+const DIR = '/Users/liangshan/Downloads/workspace/tmp';
+// const DIR = '/mnt/srv/web_static/images/tmp';
+
+const DOMAIN = 'http://10.2.5.98'
+// const DOMAIN = 'http://static.dei2.com/images/tmp'
 
 function S4 () {
   return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
@@ -89,7 +91,7 @@ module.exports = class extends enkel.controller.base {
       if (params.width != 0 && params.height != 0) {
         cmdStr += `-s ${params.width}x${params.height} `
       }
-      cmdStr += `-pix_fmt bgr24 -y ${DIR}/${p}/${filename}.${params.imageType}`
+      cmdStr += `-pix_fmt rgb24 -y ${DIR}/${p}/${filename}.${params.imageType}`
       try {
         execSync(cmdStr)
         exec(`rm -rf ${DIR + '/' + p + '/' + uploadedFile.filename}`)
@@ -180,28 +182,6 @@ module.exports = class extends enkel.controller.base {
         data: null
       })
     });
-
-    // let cmdStr = `ffmpeg -i '${params.path}' `
-    // if (params.width != 0 && params.height != 0) {
-    //   cmdStr += `-s ${params.width}x${params.height} `
-    // }
-    // cmdStr += `-pix_fmt bgr24 -y ${DIR}/${filename}.${params.imageType}`
-    // try {
-    //   execSync(cmdStr)
-    //   return this.json({
-    //     status: 200,
-    //     message: '成功',
-    //     data: {
-    //       path: `${DOMAIN}/${filename}.${params.imageType}`
-    //     }
-    //   })
-    // } catch (err) {
-    //   return this.json({
-    //     status: 1001,
-    //     message: '失败',
-    //     data: null
-    //   })
-    // }
   }
 
   async indexAction () {
@@ -221,6 +201,48 @@ module.exports = class extends enkel.controller.base {
       status: 200,
       message: '成功',
       data: {}
+    })
+  }
+
+  async getAudioInfoAction () {
+    let params = this.get()
+    let p = this.checkImagePath()
+
+    // let cmdStr = `ffprobe -i '${params.path}'`
+    // let res = execSync(cmdStr)
+    // console.log(res)
+    let command = ffmpeg(params.path)
+    command.ffprobe((err, metadata) => {
+      if (err) {
+        return this.json({
+          message: err.message,
+          status: 1001
+        })
+      }
+      var images = metadata.streams.filter(function (stream) {
+        return stream.disposition.attached_pic;
+      });
+      // console.dir(`${DIR}/${p}/cover.jpg`);
+
+      let filename = getUUID('INIG-img-')
+      if (images.length > 0) {
+        command.outputOptions(['-c copy', `-map 0:${images[0].index}`])
+          .save(`${DIR}/${p}/${filename}.jpg`, (err, res) => {
+            if (err) {
+              return this.json({
+                status: 1002
+              })
+            }
+          });
+      }
+
+      return this.json({
+        status: 200,
+        message: '成功',
+        data: Object.assign({}, metadata, {
+          cover: images.length > 0 ? `${DOMAIN}/${p}/${filename}.jpg` : ''
+        })
+      })
     })
   }
 }
