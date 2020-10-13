@@ -185,7 +185,6 @@ module.exports = class extends enkel.controller.base {
   }
 
   async indexAction () {
-    // let tmpDir = '/mnt/srv/web_static/extensions/avatar';
     let params = this.get()
     let uploadFile = this.uploadTmpFile(params)
     return this.json({
@@ -193,24 +192,12 @@ module.exports = class extends enkel.controller.base {
       message: '成功',
       path: uploadFile
     })
-    let res = execSync(`ffmpeg`)
-
-    console.log(res)
-
-    return this.json({
-      status: 200,
-      message: '成功',
-      data: {}
-    })
   }
 
   async getAudioInfoAction () {
     let params = this.get()
     let p = this.checkImagePath()
 
-    // let cmdStr = `ffprobe -i '${params.path}'`
-    // let res = execSync(cmdStr)
-    // console.log(res)
     let command = ffmpeg(params.path)
     command.ffprobe((err, metadata) => {
       if (err) {
@@ -222,7 +209,6 @@ module.exports = class extends enkel.controller.base {
       var images = metadata.streams.filter(function (stream) {
         return stream.disposition.attached_pic;
       });
-      // console.dir(`${DIR}/${p}/cover.jpg`);
 
       let filename = getUUID('INIG-img-')
       if (images.length > 0) {
@@ -244,5 +230,118 @@ module.exports = class extends enkel.controller.base {
         })
       })
     })
+  }
+
+  async getAudioInfo2Action () {
+    let params = this.get()
+    let filename = getUUID('INIG-img-')
+    let p = this.checkImagePath()
+    try {
+      let uploadedFile = await this.upload({
+        accept: params.accept || "mp3;wav;flac;ogg;aac;m4a;wma;mka;au;aiff;opus;ra;amr",
+        size: 200 * 1024 * 1024,
+        uploadDir: DIR + '/' + p,
+        rename: true,
+        multiples: false
+      });
+
+      let command = ffmpeg(`${DIR + '/' + p + '/' + uploadedFile.filename}`)
+      command.ffprobe((err, metadata) => {
+        if (err) {
+          return this.json({
+            message: err.message,
+            status: 1001
+          })
+        }
+        var images = metadata.streams.filter(function (stream) {
+          return stream.disposition.attached_pic;
+        });
+        console.log(uploadedFile)
+        if (images.length > 0) {
+          command.outputOptions(['-c copy', `-map 0:${images[0].index}`])
+            .saveToFile(`${DIR}/${p}/${filename}.jpg`).on('error', (err) => {
+              return this.json({
+                status: 1002,
+                message: err.message || '失败',
+                data: null
+              })
+            }).on('end', () => {
+              return this.json({
+                status: 200,
+                message: '成功',
+                data: Object.assign({}, metadata, {
+                  audio: `${DOMAIN}/${p}/${uploadedFile.filename}`,
+                  cover: images.length > 0 ? `${DOMAIN}/${p}/${filename}.jpg` : ''
+                })
+              })
+            })
+        } else {
+          return this.json({
+            status: 200,
+            message: '成功',
+            data: Object.assign({}, metadata, {
+              audio: `${DOMAIN}/${p}/${uploadedFile.filename}`,
+              cover: images.length > 0 ? `${DOMAIN}/${p}/${filename}.jpg` : ''
+            })
+          })
+        }
+      })
+    } catch (err) {
+      return this.json({
+        status: 1001,
+        message: err.message || '失败',
+        data: null
+      })
+    }
+  }
+
+  async setAudioInfoAction () { }
+
+  /**
+   * 音频添加封面，标题等metadata
+   */
+  async setAudioInfo2Action () {
+    let params = this.get()
+    let filename = getUUID('INIG-img-')
+    let p = this.checkImagePath()
+    try {
+      // let uploadedFile = await this.upload({
+      //   accept: params.accept || "mp3;wav;flac;ogg;aac;m4a;wma;mka;au;aiff;opus;ra;amr",
+      //   size: 200 * 1024 * 1024,
+      //   uploadDir: DIR + '/' + p,
+      //   rename: true,
+      //   multiples: false
+      // });
+
+      let command = ffmpeg().addInput(`/Users/liangshan/Downloads/01.flac`).addInput('/Users/liangshan/Downloads/1.jpeg').outputOptions([
+        '-map 0:0',
+        '-map 1:0',
+        '-c copy',
+        '-id3v2_version 3',
+        '-metadata:s:v title="Album Cover"',
+        '-metadata:s:v comment="Cover (front)"'
+      ]).saveToFile(`${DIR}/${p}/${filename}.jpg`).on('error', (err) => {
+        return this.json({
+          status: 1002,
+          message: err.message || '失败',
+          data: null
+        })
+      }).on('end', () => {
+        return this.json({
+          status: 200,
+          message: '成功',
+          data: {
+            path: `${DOMAIN}/${p}/${uploadedFile.filename}`
+          }
+        })
+      })
+
+    } catch (err) {
+      return this.json({
+        status: 1001,
+        message: err.message || '失败',
+        data: null
+      })
+    }
   }
 }
