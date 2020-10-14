@@ -13,10 +13,10 @@ const DOMAIN = 'http://127.0.0.1'
 // const DOMAIN = 'http://10.2.5.98'
 // const DOMAIN = 'http://static.dei2.com/images/tmp'
 
-function S4() {
+function S4 () {
   return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
 }
-function getUUID(prefix) {
+function getUUID (prefix) {
   return (
     (prefix ? prefix : '') +
     (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
@@ -24,7 +24,7 @@ function getUUID(prefix) {
 }
 
 module.exports = class extends enkel.controller.base {
-  init(http) {
+  init (http) {
     super.init(http)
 
     this.response.setHeader('Access-Control-Allow-Origin', '*')
@@ -32,12 +32,12 @@ module.exports = class extends enkel.controller.base {
     this.response.setHeader('Access-Control-Allow-Methods', '*')
   }
 
-  getFileName(src) {
+  getFileName (src) {
     let s = src.split('/').pop()
     return s.substring(0, s.lastIndexOf('.'))
   }
 
-  uploadTmpFile(args) {
+  uploadTmpFile (args) {
     return new Promise(async (resolve) => {
       try {
         let uploadedFile = await this.upload({
@@ -54,7 +54,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  checkImagePath() {
+  checkImagePath () {
     let d = new Date()
     let p = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(
       2,
@@ -84,7 +84,7 @@ module.exports = class extends enkel.controller.base {
     return p
   }
 
-  async doConvert2Action() {
+  async doConvert2Action () {
     let params = this.get()
     let filename = getUUID('INIG-')
     let p = this.checkImagePath()
@@ -129,7 +129,7 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async doConvertAction() {
+  async doConvertAction () {
     const that = this
     let params = this.get()
 
@@ -200,7 +200,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async indexAction() {
+  async indexAction () {
     let params = this.get()
     let uploadFile = this.uploadTmpFile(params)
     return this.json({
@@ -210,7 +210,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async getAudioInfoAction() {
+  async getAudioInfoAction () {
     let params = this.get()
     let p = this.checkImagePath()
 
@@ -249,7 +249,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async getAudioInfo2Action() {
+  async getAudioInfo2Action () {
     let params = this.get()
     let filename = getUUID('INIG-img-')
     let p = this.checkImagePath()
@@ -318,12 +318,12 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async setAudioInfoAction() {}
+  async setAudioInfoAction () { }
 
   /**
    * 音频添加封面，标题等metadata
    */
-  async setAudioInfo2Action() {
+  async setAudioInfo2Action () {
     let params = this.get()
     let filename = getUUID('INIG-img-')
     let p = this.checkImagePath()
@@ -372,4 +372,81 @@ module.exports = class extends enkel.controller.base {
       })
     }
   }
+
+  _durationFormat (duration) {
+    let d = parseInt(Number(duration))
+    let h = String(parseInt(d / (60 * 60)))
+    let m = String(parseInt((d % (60 * 60)) / 60)).padStart(2, '0')
+    let s = String(parseInt(d % 60)).padStart(2, '0')
+    return (h > 0 ? h.padStart(2, '0') + ':' : '') + m + ':' + s
+  }
+
+  async convertAudioAction () { }
+
+  /**
+   * 音频添加封面，标题等metadata
+   */
+  async convertAudio2Action () {
+    let params = this.get()
+    let filename = getUUID('INIG-audio-')
+    let p = this.checkImagePath()
+    try {
+      let uploadedFile = await this.upload({
+        accept: params.accept || "mp3;wav;flac;ogg;aac;m4a;wma;mka;au;aiff;opus;amr",
+        size: 200 * 1024 * 1024,
+        uploadDir: DIR + '/' + p,
+        rename: true,
+        multiples: false
+      });
+      console.log(params)
+      // let command = ffmpeg(params.path)
+      let command = ffmpeg(`${DIR + '/' + p + '/' + uploadedFile.filename}`)
+      let outOptions = []
+      if (params.sampleRate) {
+        outOptions.push('-ar ' + params.sampleRate)
+      }
+      if (params.bitRate) {
+        outOptions.push('-ab ' + params.bitRate)
+      }
+      if (params.channels) {
+        outOptions.push('-ac ' + params.channels)
+      }
+      if (params.volume && params.volume != '0') {
+        outOptions.push(`-filter:a volume=${params.volume}dB`)
+      }
+      let cut = params.cut ? params.cut.split(',') : []
+      if (cut && cut.length == 2) {
+        // outOptions.push('-c:a copy')
+        outOptions.push('-ss ' + this._durationFormat(cut[0]))
+        outOptions.push('-t ' + this._durationFormat(Number(cut[1]) - Number(cut[0]) + 1))
+      }
+      console.log(outOptions)
+      command.outputOptions(outOptions)
+        .saveToFile(`${DIR}/${p}/${filename}.${params.audioType}`)
+        .on('error', (err) => {
+          return this.json({
+            status: 1002,
+            message: err.message || '失败',
+            data: null,
+          })
+        })
+        .on('end', () => {
+          return this.json({
+            status: 200,
+            message: '成功',
+            data: {
+              path: `${DOMAIN}/${p}/${filename}.${params.audioType}`,
+            },
+          })
+        })
+    } catch (err) {
+      return this.json({
+        status: 1001,
+        message: err.message || '失败',
+        data: null,
+      })
+    }
+  }
+
+
 }
