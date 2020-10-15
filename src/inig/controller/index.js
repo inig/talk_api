@@ -13,10 +13,10 @@ const DOMAIN = 'http://127.0.0.1'
 // const DOMAIN = 'http://10.2.5.98'
 // const DOMAIN = 'http://static.dei2.com/images/tmp'
 
-function S4() {
+function S4 () {
   return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
 }
-function getUUID(prefix) {
+function getUUID (prefix) {
   return (
     (prefix ? prefix : '') +
     (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
@@ -24,7 +24,7 @@ function getUUID(prefix) {
 }
 
 module.exports = class extends enkel.controller.base {
-  init(http) {
+  init (http) {
     super.init(http)
 
     this.response.setHeader('Access-Control-Allow-Origin', '*')
@@ -32,12 +32,12 @@ module.exports = class extends enkel.controller.base {
     this.response.setHeader('Access-Control-Allow-Methods', '*')
   }
 
-  getFileName(src) {
+  getFileName (src) {
     let s = src.split('/').pop()
     return s.substring(0, s.lastIndexOf('.'))
   }
 
-  uploadTmpFile(args) {
+  uploadTmpFile (args) {
     return new Promise(async (resolve) => {
       try {
         let uploadedFile = await this.upload({
@@ -54,7 +54,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  checkImagePath() {
+  checkImagePath () {
     let d = new Date()
     let p = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(
       2,
@@ -84,7 +84,7 @@ module.exports = class extends enkel.controller.base {
     return p
   }
 
-  async doConvert2Action() {
+  async doConvert2Action () {
     let params = this.get()
     let filename = getUUID('INIG-')
     let p = this.checkImagePath()
@@ -129,7 +129,7 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async doConvertAction() {
+  async doConvertAction () {
     const that = this
     let params = this.get()
 
@@ -200,7 +200,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async indexAction() {
+  async indexAction () {
     let params = this.get()
     let uploadFile = this.uploadTmpFile(params)
     return this.json({
@@ -210,7 +210,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async getAudioInfoAction() {
+  async getAudioInfoAction () {
     let params = this.get()
     let p = this.checkImagePath()
 
@@ -249,7 +249,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async getAudioInfo2Action() {
+  async getAudioInfo2Action () {
     let params = this.get()
     let filename = getUUID('INIG-img-')
     let p = this.checkImagePath()
@@ -318,12 +318,12 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async setAudioInfoAction() {}
+  async setAudioInfoAction () { }
 
   /**
    * 音频添加封面，标题等metadata
    */
-  async setAudioInfo2Action() {
+  async setAudioInfo2Action () {
     let params = this.get()
     let filename = getUUID('INIG-img-')
     let p = this.checkImagePath()
@@ -373,7 +373,7 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  _durationFormat(duration) {
+  _durationFormat (duration) {
     let d = parseInt(Number(duration))
     let h = String(parseInt(d / (60 * 60)))
     let m = String(parseInt((d % (60 * 60)) / 60)).padStart(2, '0')
@@ -381,12 +381,12 @@ module.exports = class extends enkel.controller.base {
     return (h > 0 ? h.padStart(2, '0') + ':' : '') + m + ':' + s
   }
 
-  async convertAudioAction() {}
+  async convertAudioAction () { }
 
   /**
    * 音频添加封面，标题等metadata
    */
-  async convertAudio2Action() {
+  async convertAudio2Action () {
     let params = this.get()
     let filename = getUUID('INIG-audio-')
     let p = this.checkImagePath()
@@ -420,7 +420,7 @@ module.exports = class extends enkel.controller.base {
         // outOptions.push('-c:a copy')
         outOptions.push('-ss ' + this._durationFormat(cut[0]))
         outOptions.push(
-          '-t ' + this._durationFormat(Number(cut[1]) - Number(cut[0]) + 1)
+          '-t ' + this._durationFormat(Number(cut[1]) - Number(cut[0]))
         )
       }
       console.log(outOptions)
@@ -435,12 +435,52 @@ module.exports = class extends enkel.controller.base {
           })
         })
         .on('end', () => {
-          return this.json({
-            status: 200,
-            message: '成功',
-            data: {
-              path: `${DOMAIN}/${p}/${filename}.${params.audioType}`,
-            },
+          let cmd = ffmpeg(`${DIR}/${p}/${filename}.${params.audioType}`)
+          cmd.ffprobe((err, metadata) => {
+            if (err) {
+              return this.json({
+                status: 200,
+                message: '成功',
+                data: {
+                  path: `${DOMAIN}/${p}/${filename}.${params.audioType}`,
+                },
+              })
+            }
+            var images = metadata.streams.filter(function (stream) {
+              return stream.disposition.attached_pic
+            })
+            if (images.length > 0) {
+              cmd
+                .outputOptions(['-c copy', `-map 0:${images[0].index}`])
+                .saveToFile(`${DIR}/${p}/${filename}.jpg`)
+                .on('error', (e) => {
+                  return this.json({
+                    status: 1002,
+                    message: e.message || '失败',
+                    data: null,
+                  })
+                })
+                .on('end', () => {
+                  return this.json({
+                    status: 200,
+                    message: '成功',
+                    data: Object.assign({}, metadata, {
+                      path: `${DOMAIN}/${p}/${filename}.${params.audioType}`,
+                      cover:
+                        images.length > 0 ? `${DOMAIN}/${p}/${filename}.jpg` : '',
+                    }),
+                  })
+                })
+            } else {
+              return this.json({
+                status: 200,
+                message: '成功',
+                data: Object.assign({}, metadata, {
+                  path: `${DOMAIN}/${p}/${uploadedFile.filename}`,
+                  cover: images.length > 0 ? `${DOMAIN}/${p}/${filename}.jpg` : '',
+                }),
+              })
+            }
           })
         })
     } catch (err) {
