@@ -6,12 +6,12 @@ const path = require('path')
 
 const ffmpeg = require('fluent-ffmpeg')
 
-const DIR = '/Users/liangshan/Downloads/workspace/tmp'
-// const DIR = '/mnt/srv/web_static/images/tmp';
+// const DIR = '/Users/liangshan/Downloads/workspace/tmp'
+const DIR = '/mnt/srv/web_static/images/tmp';
 
-const DOMAIN = 'http://127.0.0.1'
+// const DOMAIN = 'http://127.0.0.1'
 // const DOMAIN = 'http://10.2.5.98'
-// const DOMAIN = 'http://static.dei2.com/images/tmp'
+const DOMAIN = 'http://static.dei2.com/images/tmp'
 
 function S4 () {
   return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
