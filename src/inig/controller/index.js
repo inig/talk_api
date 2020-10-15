@@ -249,7 +249,7 @@ module.exports = class extends enkel.controller.base {
     })
   }
 
-  async getAudioInfo2Action () {
+  async getAudioInfoFromLocalAction () {
     let params = this.get()
     let filename = getUUID('INIG-img-')
     let p = this.checkImagePath()
