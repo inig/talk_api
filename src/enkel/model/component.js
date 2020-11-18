@@ -10,11 +10,11 @@ module.exports = {
       allowNull: false
     },
     desc: {
-      type: Sequelize.STRING,
+      type: Sequelize.TEXT,
       defaultValue: ''
     },
     icon: {
-      type: Sequelize.STRING,
+      type: Sequelize.TEXT,
       allowNull: false
     },
     path: {
@@ -26,7 +26,7 @@ module.exports = {
       defaultValue: ''
     },
     url: { // 远程组件的地址，http://xxx/xx.vue
-      type: Sequelize.STRING,
+      type: Sequelize.TEXT,
       defaultValue: ''
     },
     version: {
