@@ -75,7 +75,24 @@ module.exports = class extends enkel.controller.base {
     console.log('>>>>', params)
     if (params.uuid) {
       // 修改组件
-
+      let updateResponse = await this.ComponentModel.update({
+        title: params.title,
+        desc: params.desc,
+        icon: params.icon,
+        url: params.url,
+        version: params.version,
+        category: params.category
+      }, {
+        where: {
+          uuid: params.uuid
+        }
+      });
+      if (updateResponse[0] > 0) {
+        // 更新用户登录token成功
+        return this.json({ status: 200, message: '发布成功' });
+      } else {
+        return this.json({ status: 1001, message: '发布失败，请稍后再试' });
+      }
     } else {
       // 新增组件
       await this.ComponentModel.create(params);
