@@ -80,7 +80,7 @@ module.exports = class extends enkel.controller.base {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
-    console.log('>>>>', params)
+    // console.log('>>>>', params)
     if (params.uuid) {
       // 修改组件
 
@@ -102,7 +102,7 @@ module.exports = class extends enkel.controller.base {
     // }
     // let params = await this.post();
     let params = this.get()
-    console.log(Object.prototype.toString.call(params), JSON.stringify(params, null, 2))
+    // console.log(Object.prototype.toString.call(params), JSON.stringify(params, null, 2))
     let _searchCondition = {}
     if (params.auth) {
       _searchCondition.auth = params.auth

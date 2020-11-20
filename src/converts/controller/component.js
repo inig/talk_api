@@ -72,7 +72,7 @@ module.exports = class extends enkel.controller.base {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
-    console.log('>>>>', params)
+    // console.log('>>>>', params)
     if (params.uuid) {
       // 修改组件
       let updateResponse = await this.ComponentModel.update({
