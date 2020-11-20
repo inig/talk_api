@@ -36,12 +36,12 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
 const qs = require('querystring');
-const Encrypt = require('../../../Static/js/crypto.js')
+// const Encrypt = require('../../../Static/js/crypto.js')
 const crypto = require('crypto');
 const dir = "/v1";
 
 module.exports = class extends enkel.controller.base {
-  init(http) {
+  init (http) {
     super.init(http);
 
     this.response.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,7 +50,7 @@ module.exports = class extends enkel.controller.base {
     this.response.setHeader("Access-Control-Allow-Credentials", "true");
   }
 
-  getCookie(name) {
+  getCookie (name) {
     if (!this.request.headers || !this.request.headers.cookie) {
       return (!name ? {} : '')
     }
@@ -76,7 +76,7 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  checkAuth() {
+  checkAuth () {
     let enkelCookie = this.getCookie('enkel')
     if (!enkelCookie || enkelCookie.trim() !== '9d935f95a1630e1282ae9861f16fcf0b') {
       return false
@@ -85,85 +85,85 @@ module.exports = class extends enkel.controller.base {
     }
   }
 
-  async v1Action() {
-    // if (!this.isPost()) {
-    //   return this.json({
-    //     status: 405,
-    //     message: '请求方法不正确',
-    //     data: {}
-    //   });
-    // }
-    // if (!this.checkAuth()) {
-    //   return this.json({status: 1001, message: '请求不合法', data: {}})
-    // }
-    let params = await this.post();
-    console.log('params; ', params)
-    if (!params.url) {
-      return this.json({
-        status: 1001,
-        message: 'url不能为空',
-        data: {}
-      })
-    }
-    let requestParams = {
-      method: params.method || 'GET',
-      url: params.url,
-      baseURL: params.baseURL,
-      headers: {
-        'Accept': '*/*',
-        'Accept-Language': 'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
-        'Connection': 'keep-alive',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Referer': 'http://music.163.com',
-        'Host': 'music.163.com',
-        'Cookie': this.request.headers.cookies,
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1'
-      }
-    }
-    let cryptoreq
-    let _data
-    if (params.method.toLowerCase() === 'get') {
-      if (params.data) {
-        cryptoreq = Encrypt(qs.parse(params.data))
-        _data = {
-          params: cryptoreq.params,
-          encSecKey: cryptoreq.encSecKey
-        }
-        requestParams.url = params.url + '?' + qs.stringify(_data)
-      } else {
-        requestParams.url = params.url
-      }
-    } else {
-      requestParams.url = params.url
-      if (params.data) {
-        cryptoreq = Encrypt(qs.parse(params.data))
-        _data = {
-          params: cryptoreq.params,
-          encSecKey: cryptoreq.encSecKey
-        }
-        requestParams.url += '?' + qs.stringify(_data)
-      }
-    }
-    if (params.headers) {
-      requestParams.headers = qs.parse(params.headers)
-    }
-    console.log('requestParams: ', requestParams)
-    axios(requestParams).then(({
-      data,
-      headers
-    }) => {
-      return this.json({
-        status: 200,
-        message: '成功',
-        headers: headers,
-        data: data
-      })
-    }).catch(err => {
-      return this.json({
-        status: 1002,
-        message: err.message,
-        data: {}
-      })
-    })
-  }
+  // async v1Action() {
+  //   // if (!this.isPost()) {
+  //   //   return this.json({
+  //   //     status: 405,
+  //   //     message: '请求方法不正确',
+  //   //     data: {}
+  //   //   });
+  //   // }
+  //   // if (!this.checkAuth()) {
+  //   //   return this.json({status: 1001, message: '请求不合法', data: {}})
+  //   // }
+  //   let params = await this.post();
+  //   console.log('params; ', params)
+  //   if (!params.url) {
+  //     return this.json({
+  //       status: 1001,
+  //       message: 'url不能为空',
+  //       data: {}
+  //     })
+  //   }
+  //   let requestParams = {
+  //     method: params.method || 'GET',
+  //     url: params.url,
+  //     baseURL: params.baseURL,
+  //     headers: {
+  //       'Accept': '*/*',
+  //       'Accept-Language': 'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
+  //       'Connection': 'keep-alive',
+  //       'Content-Type': 'application/x-www-form-urlencoded',
+  //       'Referer': 'http://music.163.com',
+  //       'Host': 'music.163.com',
+  //       'Cookie': this.request.headers.cookies,
+  //       'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1'
+  //     }
+  //   }
+  //   let cryptoreq
+  //   let _data
+  //   if (params.method.toLowerCase() === 'get') {
+  //     if (params.data) {
+  //       cryptoreq = Encrypt(qs.parse(params.data))
+  //       _data = {
+  //         params: cryptoreq.params,
+  //         encSecKey: cryptoreq.encSecKey
+  //       }
+  //       requestParams.url = params.url + '?' + qs.stringify(_data)
+  //     } else {
+  //       requestParams.url = params.url
+  //     }
+  //   } else {
+  //     requestParams.url = params.url
+  //     if (params.data) {
+  //       cryptoreq = Encrypt(qs.parse(params.data))
+  //       _data = {
+  //         params: cryptoreq.params,
+  //         encSecKey: cryptoreq.encSecKey
+  //       }
+  //       requestParams.url += '?' + qs.stringify(_data)
+  //     }
+  //   }
+  //   if (params.headers) {
+  //     requestParams.headers = qs.parse(params.headers)
+  //   }
+  //   console.log('requestParams: ', requestParams)
+  //   axios(requestParams).then(({
+  //     data,
+  //     headers
+  //   }) => {
+  //     return this.json({
+  //       status: 200,
+  //       message: '成功',
+  //       headers: headers,
+  //       data: data
+  //     })
+  //   }).catch(err => {
+  //     return this.json({
+  //       status: 1002,
+  //       message: err.message,
+  //       data: {}
+  //     })
+  //   })
+  // }
 }
