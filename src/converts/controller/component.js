@@ -89,7 +89,30 @@ module.exports = class extends enkel.controller.base {
       });
       if (updateResponse[0] > 0) {
         // 更新用户登录token成功
-        return this.json({ status: 200, message: '发布成功' });
+        let _component = await this.ComponentModel.findOne({
+          where: { uuid: params.uuid },
+          attributes: { exclude: ['id'] },
+          include: [
+            {
+              model: this.UserModel,
+              attributes: {
+                exclude: ['id', 'createAt', 'updateAt', 'token', 'password']
+              }
+            },
+            {
+              model: this.CategoryModel,
+              attributes: {
+                exclude: ['id', 'createAt', 'updateAt']
+              }
+            }
+          ]
+        });
+
+        if (_component) {
+          return this.json({ status: 200, message: '发布成功', data: _component });
+        } else {
+          return this.json({ status: 1001, message: '发布失败，请稍后再试' });
+        }
       } else {
         return this.json({ status: 1001, message: '发布失败，请稍后再试' });
       }
