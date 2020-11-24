@@ -1,19 +1,21 @@
 //use pm2 start app
 //pm2 startOrGracefulReload pm2.json
 {
-  "apps": [{
-    "name": "talk_api",
-    "script": "index.js",
-    "cwd": "app/",
-    "max_memory_restart": "1G",
-    "autorestart": true,
-    "watch": true,
-    "exec_mode": "cluster",
-    "instances": 2,
-    "node_args": "",
-    "args": [],
-    "env": {
-      "NODE_ENV": "production"
+  "apps": [
+    {
+      "name": "talkapi",
+      "script": "index.js",
+      "cwd": "app/",
+      "max_memory_restart": "1G",
+      "autorestart": true,
+      "watch": true,
+      "exec_mode": "cluster",
+      "instances": 2,
+      "node_args": "",
+      "args": [],
+      "env": {
+        "NODE_ENV": "production"
+      }
     }
-  }]
+  ]
 }
