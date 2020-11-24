@@ -205,7 +205,7 @@ module.exports = class extends enkel.controller.base {
     let uploadFile = this.uploadTmpFile(params)
     return this.json({
       status: 200,
-      message: '成功222',
+      message: '成功666',
       path: uploadFile,
     })
   }
