@@ -142,7 +142,7 @@ module.exports = class extends enkel.controller.base {
       _searchCondition.status = Number(params.status)
     }
     let pageIndex = Number(params.pageIndex) || 1;
-    let pageSize = Number(params.pageSize) || 30;
+    let pageSize = Number(params.pageSize) || 100;
     let componentList = await this.ComponentModel.findAll({
       where: _searchCondition,
       limit: pageSize,
