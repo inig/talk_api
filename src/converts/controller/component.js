@@ -129,15 +129,52 @@ module.exports = class extends enkel.controller.base {
   }
 
   async listAction () {
-    // if (!this.isPost()) {
-    //   return this.json({ status: 405, message: '请求方法不正确', data: {} });
-    // }
-    // let params = await this.post();
-    let params = this.get()
-    let _searchCondition = {}
-    if (params.auth) {
-      _searchCondition.auth = params.auth
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
+    let params = await this.post();
+    // let params = this.get()
+    let _searchCondition = {}
+    switch (params.conditionType) {
+      case 'all':
+        break
+      case 'self':
+        _searchCondition.auth = params.auth
+        break
+      case 'others':
+        _searchCondition.auth = {
+          [this.Op.ne]: params.auth
+        }
+        break
+      case 'custom':
+        if (params.kw && params.kw.trim()) {
+          _searchCondition = Object.assign({}, _searchCondition, {
+            [this.Op.or]: [
+              {
+                title: {
+                  [this.Op.regexp]: params.kw
+                }
+              },
+              {
+                name: {
+                  [this.Op.regexp]: params.kw
+                }
+              },
+              {
+                auth: {
+                  [this.Op.regexp]: params.kw
+                }
+              }
+            ]
+          })
+        }
+        break
+      default:
+        break
+    }
+    // if (params.auth) {
+    //   _searchCondition.auth = params.auth
+    // }
     if (Object.keys(params).indexOf('status') > -1) {
       _searchCondition.status = Number(params.status)
     }
