@@ -75,14 +75,17 @@ module.exports = class extends enkel.controller.base {
     // console.log('>>>>', params)
     if (params.uuid) {
       // 修改组件
-      let updateResponse = await this.ComponentModel.update({
+      let updateResponse = await this.ComponentModel.update(Object.assign({
         title: params.title,
         desc: params.desc,
         icon: params.icon,
         url: params.url,
         version: params.version,
-        category: params.category
-      }, {
+        category: params.category,
+        windowOption: params.windowOption
+      }, (Object.keys(params).indexOf('status') > -1) ? {
+        status: params.status
+      } : {}), {
         where: {
           uuid: params.uuid
         }
@@ -134,39 +137,77 @@ module.exports = class extends enkel.controller.base {
     }
     let params = await this.post();
     // let params = this.get()
-    let _searchCondition = {}
+    let _searchCondition = {
+      // [this.Op.or]: []
+    }
     switch (params.conditionType) {
       case 'all':
         break
       case 'self':
-        _searchCondition.auth = params.auth
+        // _searchCondition.auth = params.auth
+        _searchCondition = {
+          [this.Op.or]: {
+            status: 2,
+            auth: params.auth
+          }
+        }
         break
       case 'others':
-        _searchCondition.auth = {
-          [this.Op.ne]: params.auth
+        // _searchCondition.auth = {
+        //   [this.Op.ne]: params.auth
+        // }
+        _searchCondition = {
+          [this.Op.or]: {
+            status: 2,
+            auth: {
+              [this.Op.ne]: params.auth
+            }
+          }
         }
         break
       case 'custom':
         if (params.kw && params.kw.trim()) {
-          _searchCondition = Object.assign({}, _searchCondition, {
-            [this.Op.or]: [
-              {
-                title: {
-                  [this.Op.regexp]: params.kw
+          // _searchCondition = Object.assign({}, _searchCondition, {
+          //   [this.Op.or]: [
+          //     {
+          //       title: {
+          //         [this.Op.regexp]: params.kw
+          //       }
+          //     },
+          //     {
+          //       name: {
+          //         [this.Op.regexp]: params.kw
+          //       }
+          //     },
+          //     {
+          //       auth: {
+          //         [this.Op.regexp]: params.kw
+          //       }
+          //     }
+          //   ]
+          // })
+          _searchCondition = {
+            [this.Op.or]: {
+              status: 2,
+              [this.Op.or]: [
+                {
+                  title: {
+                    [this.Op.regexp]: params.kw
+                  }
+                },
+                {
+                  name: {
+                    [this.Op.regexp]: params.kw
+                  }
+                },
+                {
+                  auth: {
+                    [this.Op.regexp]: params.kw
+                  }
                 }
-              },
-              {
-                name: {
-                  [this.Op.regexp]: params.kw
-                }
-              },
-              {
-                auth: {
-                  [this.Op.regexp]: params.kw
-                }
-              }
-            ]
-          })
+              ]
+            }
+          }
         }
         break
       default:
