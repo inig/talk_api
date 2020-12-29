@@ -305,6 +305,15 @@ module.exports = class extends enkel.controller.base {
     if (updateLoginStatus[0] > 0) {
       // 更新用户登录token成功
       loginUser.dataValues.token = loginToken;
+      let _settings = loginUser.dataValues.settings
+      if (Object.prototype.toString.call(_settings) == '[object String]') {
+        try {
+          _settings = JSON.parse(_settings)
+        } catch (e) {
+          _settings = {}
+        }
+        loginUser.dataValues.settings = _settings
+      }
     }
     return this.json({ status: 200, message: '登录成功', data: loginUser.dataValues || {} })
   }
@@ -817,9 +826,9 @@ module.exports = class extends enkel.controller.base {
     if (!this.isPost()) {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
-    if (!this.checkAuth()) {
-      return this.json({ status: 1001, message: '请求不合法', data: {} })
-    }
+    // if (!this.checkAuth()) {
+    //   return this.json({ status: 1001, message: '请求不合法', data: {} })
+    // }
     let params = await this.post();
     if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
       return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
