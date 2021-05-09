@@ -6,6 +6,11 @@ const Sequelize = enkel.Sequelize
 module.exports = {
   safe: true,
   fields: {
+    id: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV4,
+      primaryKey: true
+    },
     username: {
       type: Sequelize.STRING,
       allowNull: false,

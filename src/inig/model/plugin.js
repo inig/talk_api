@@ -1,19 +1,22 @@
 /**
  * Created by liangshan on 2017/11/27.
+ * 
+ * 已经审核通过的插件
  */
 const Sequelize = enkel.Sequelize
 module.exports = {
   safe: true,
   fields: {
+    id: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV4,
+      primaryKey: true
+    },
     name: {
       type: Sequelize.STRING,
       allowNull: false
     },
     description: {
-      type: Sequelize.STRING,
-      defaultValue: ''
-    },
-    id: {
       type: Sequelize.STRING,
       defaultValue: ''
     },

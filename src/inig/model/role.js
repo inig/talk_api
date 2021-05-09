@@ -5,7 +5,12 @@ const Sequelize = enkel.Sequelize
 module.exports = {
   safe: true,
   fields: {
-    name: {
+    id: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV4,
+      primaryKey: true
+    },
+    label: {
       type: Sequelize.STRING,
       allowNull: false
     },
@@ -13,9 +18,9 @@ module.exports = {
       type: Sequelize.STRING,
       allowNull: false
     },
-    value: {
-      type: Sequelize.INTEGER,
-      defaultValue: 1
+    name: {
+      type: Sequelize.STRING,
+      defaultValue: ''
     },
     status: {
       type: Sequelize.INTEGER,
