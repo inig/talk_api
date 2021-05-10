@@ -22,6 +22,14 @@ module.exports = class extends enkel.controller.base {
     this.response.setHeader('Access-Control-Allow-Methods', '*')
   }
 
+  _encodeId (id) {
+    return ~Number(id) << 2 & 0x7FFFFFFF
+  }
+
+  _decodeId (id) {
+    return ~((Number(id) | 0xFFFFFFFF80000000) >> 2)
+  }
+
   getCookie (name) {
     if (!this.request.headers || !this.request.headers.cookies) {
       return (!name ? {} : '')
@@ -103,22 +111,22 @@ module.exports = class extends enkel.controller.base {
     let loginWith = '';
     let loginUser = await this.UserModel.findOne({
       where: { username: params.username, password: params.password },
-      attributes: { exclude: ['id', 'createAt', 'updateAt', 'password'] },
+      attributes: { exclude: ['createAt', 'updateAt', 'password'] },
       include: [{
         model: this.RoleModel,
         attributes: {
-          exclude: ['id', 'createAt', 'updateAt']
+          exclude: ['createAt', 'updateAt']
         }
       }]
     });
     if (!loginUser) {
       loginUser = await this.UserModel.findOne({
         where: { phonenum: params.username, password: params.password },
-        attributes: { exclude: ['id', 'createAt', 'updateAt', 'password'] },
+        attributes: { exclude: ['createAt', 'updateAt', 'password'] },
         include: [{
           model: this.RoleModel,
           attributes: {
-            exclude: ['id', 'createAt', 'updateAt']
+            exclude: ['createAt', 'updateAt']
           }
         }]
       });
@@ -150,7 +158,11 @@ module.exports = class extends enkel.controller.base {
       // 更新用户登录token成功
       loginUser.dataValues.token = loginToken;
     }
-    return this.json({ status: 200, message: '登录成功', data: loginUser.dataValues || {} })
+    return this.json({
+      status: 200, message: '登录成功', data: Object.assign({}, loginUser.dataValues, {
+        id: this._encodeId(loginUser.dataValues.id)
+      }) || {}
+    })
   }
 
   async registerAction () {

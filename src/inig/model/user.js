@@ -7,9 +7,12 @@ module.exports = {
   safe: true,
   fields: {
     id: {
-      type: Sequelize.UUID,
-      defaultValue: Sequelize.UUIDV4,
-      primaryKey: true
+      type: Sequelize.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+      get () {
+        return ~this.getDataValue('id') << 2 & 0x7FFFFFFF
+      }
     },
     username: {
       type: Sequelize.STRING,
@@ -72,7 +75,7 @@ module.exports = {
       defaultValue: ''
     },
     role: {
-      type: Sequelize.INTEGER
+      type: Sequelize.STRING
     }
   }
 };
