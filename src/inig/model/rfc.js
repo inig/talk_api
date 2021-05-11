@@ -12,6 +12,10 @@ module.exports = {
       defaultValue: Sequelize.UUIDV4,
       primaryKey: true
     },
+    pid: {
+      type: Sequelize.STRING,
+      default: ''
+    },
     name: {
       type: Sequelize.STRING,
       allowNull: false
@@ -33,6 +37,11 @@ module.exports = {
       type: Sequelize.STRING,
       allowNull: false,
       defaultValue: 'logo.png'
+    },
+    phonenum: {
+      type: Sequelize.STRING,
+      default: '',
+      allowNull: false
     },
     author: {
       type: Sequelize.STRING,
