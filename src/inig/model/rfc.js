@@ -16,6 +16,10 @@ module.exports = {
       type: Sequelize.STRING,
       default: ''
     },
+    category: {
+      type: Sequelize.STRING,
+      default: ''
+    },
     name: {
       type: Sequelize.STRING,
       allowNull: false
@@ -42,6 +46,14 @@ module.exports = {
       type: Sequelize.STRING,
       default: '',
       allowNull: false
+    },
+    main: {
+      type: Sequelize.STRING,
+      defaultValue: 'index.html'
+    },
+    features: {
+      type: Sequelize.TEXT,
+      defaultValue: '{}'
     },
     author: {
       type: Sequelize.STRING,
