@@ -24,6 +24,10 @@ module.exports = {
       type: Sequelize.STRING,
       allowNull: false
     },
+    pluginName: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
     description: {
       type: Sequelize.STRING,
       defaultValue: ''
