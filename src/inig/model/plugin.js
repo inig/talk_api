@@ -59,6 +59,10 @@ module.exports = {
       type: Sequelize.TEXT,
       defaultValue: '{}'
     },
+    windowOptions: {
+      type: Sequelize.TEXT,
+      defaultValue: '{"width":1000,"height":800}'
+    },
     author: {
       type: Sequelize.STRING,
       defaultValue: ''
