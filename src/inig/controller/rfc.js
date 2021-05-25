@@ -93,7 +93,6 @@ module.exports = class extends enkel.controller.base {
       return this.json({ status: 405, message: '请求方法不正确', data: {} });
     }
     let params = await this.post();
-    console.log('### params: ', params)
     let queryResponse = await this.RfcModel.findOne({
       where: { pid: params.id, status: 0 },
       attributes: { exclude: ['createAt', 'updateAt'] }

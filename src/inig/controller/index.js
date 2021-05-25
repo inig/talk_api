@@ -275,7 +275,6 @@ module.exports = class extends enkel.controller.base {
         var images = metadata.streams.filter(function (stream) {
           return stream.disposition.attached_pic
         })
-        console.log(uploadedFile)
         if (images.length > 0) {
           command
             .outputOptions(['-c copy', `-map 0:${images[0].index}`])
@@ -399,7 +398,6 @@ module.exports = class extends enkel.controller.base {
         rename: true,
         multiples: false,
       })
-      console.log(params)
       // let command = ffmpeg(params.path)
       let command = ffmpeg(`${DIR + '/' + p + '/' + uploadedFile.filename}`)
       let outOptions = []
@@ -423,7 +421,6 @@ module.exports = class extends enkel.controller.base {
           '-t ' + this._durationFormat(Number(cut[1]) - Number(cut[0]))
         )
       }
-      console.log(outOptions)
       command
         .outputOptions(outOptions)
         .saveToFile(`${DIR}/${p}/${filename}.${params.audioType}`)
