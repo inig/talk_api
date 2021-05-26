@@ -65,7 +65,7 @@ module.exports = class extends enkel.controller.base {
       })
       return this.json({
         status: 200,
-        message: '成功2',
+        message: '成功',
         data: {
           list: allCategories
         }

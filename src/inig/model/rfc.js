@@ -20,10 +20,6 @@ module.exports = {
       type: Sequelize.STRING,
       default: ''
     },
-    name: {
-      type: Sequelize.STRING,
-      allowNull: false
-    },
     pluginName: {
       type: Sequelize.STRING,
       default: ''
