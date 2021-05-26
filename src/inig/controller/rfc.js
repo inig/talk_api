@@ -101,7 +101,7 @@ module.exports = class extends enkel.controller.base {
       // 当前插件无审核中
       await this.RfcModel.create({
         pid: params.id,
-        name: params.name,
+        pluginName: params.pluginName,
         version: params.version,
         description: params.description,
         logo: params.logo,
@@ -124,7 +124,7 @@ module.exports = class extends enkel.controller.base {
       } else {
         // 更新 审核中版本的信息
         await this.RfcModel.update({
-          name: params.name,
+          pluginName: params.pluginName,
           version: params.version,
           description: params.description,
           logo: params.logo,
@@ -253,9 +253,6 @@ module.exports = class extends enkel.controller.base {
         let updateParams = {}
         if (params.category) {
           updateParams.category = params.category
-        }
-        if (params.name) {
-          updateParams.name = params.name
         }
         if (params.main) {
           updateParams.main = params.main
