@@ -349,6 +349,14 @@ module.exports = class extends enkel.controller.base {
             },
             transaction: t
           }).then(async (res) => {
+            this.RfcModel.destroy({
+              where: {
+                pid: params.pid,
+                version: {
+                  [this.Op.ne]: params.version
+                }
+              }
+            })
             if (params.status == 1) {
               if (pluginQueryResponse) {
                 // 已经发布过的插件 
