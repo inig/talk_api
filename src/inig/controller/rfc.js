@@ -97,6 +97,15 @@ module.exports = class extends enkel.controller.base {
       where: { pid: params.id, status: 0 },
       attributes: { exclude: ['createAt', 'updateAt'] }
     });
+    let queryPluginResponse = await this.PluginModel.findOne({
+      where: {
+        pid: params.id
+      }
+    })
+    let _category = ''
+    if (queryPluginResponse) {
+      _category = queryPluginResponse.dataValues.category
+    }
     if (!queryResponse) {
       // 当前插件无审核中
       await this.RfcModel.create({
@@ -111,7 +120,8 @@ module.exports = class extends enkel.controller.base {
         main: params.main || 'index.html',
         features: params.features || '{}',
         url: params.url || '',
-        size: params.size || '0'
+        size: params.size || '0',
+        category: _category,
       })
     } else {
       // 当前插件 存在审核中的版本
@@ -134,7 +144,8 @@ module.exports = class extends enkel.controller.base {
           main: params.main || 'index.html',
           features: params.features || '{}',
           url: params.url || '',
-          size: params.size || '0'
+          size: params.size || '0',
+          category: _category,
         }, {
           where: {
             pid: params.id
