@@ -463,4 +463,47 @@ module.exports = class extends enkel.controller.base {
       // }
     }
   }
+  async getRfcInfoAction () {
+    if (!this.isPost()) {
+      return this.json({ status: 405, message: '请求方法不正确', data: {} });
+    }
+    let params = await this.post();
+    if (!params.token || params.token === '' || !params.phonenum || params.phonenum === '') {
+      return this.json({ status: 401, message: '缺少参数', data: { needLogin: true } });
+    }
+    if (!this.checkLogin({ username: params.phonenum, token: params.token })) {
+      return this.json({ status: 401, message: '登录状态失效，请重新登录', data: { needLogin: true } });
+    } else {
+      let userInfo = await this.UserModel.findOne({
+        where: {
+          phonenum: params.phonenum
+        },
+        attributes: { exclude: ['id', 'password', 'createAt', 'updateAt'] }
+      })
+      if (!userInfo) {
+        return this.json({
+          status: 402,
+          message: '账号不存在',
+          data: {
+            needRegister: true
+          }
+        })
+      } else {
+        let queryResponse = await this.RfcModel.findOne({
+          where: {
+            pid: params.id,
+            phonenum: params.phonenum
+          },
+          order: [
+            ['updatedAt', 'DESC']
+          ]
+        })
+        return this.json({
+          status: 200,
+          message: '成功',
+          data: queryResponse || {}
+        })
+      }
+    }
+  }
 }
